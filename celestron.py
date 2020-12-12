@@ -215,12 +215,18 @@ def transmitmsg(receiver,command):
     data = sendmsg(receiver,command)
     if connmode == 'wifi':
         sock.send(data)
-    if connmode == 'serial' or connmode=='hc':
+    if connmode == 'serial':
+        ser.rtscts = True
         ser.rts=True
         ser.write(data)
         ser.rts=False
         ser.rts=True
         ser.rts=False
+        time.sleep(.1)
+        ser.read(ser.inWaiting())
+        ser.rtscts = False
+    if connmode == 'hc':
+        ser.write(data)
     time.sleep(0.25)
 
 def keep_alive(interval):
