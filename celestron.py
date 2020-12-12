@@ -6,6 +6,7 @@ import threading
 import binascii
 import serial
 import keyboard
+import argparse
 
 global msgqueue
 msgqueue = ''
@@ -172,6 +173,7 @@ def sendmsg(receiver,command):
   return hexoutput
 
 def scanauxbus(interval):
+  global keepalive
   print ("-----------------------")
   print ("Initiating AUXBUS SCAN ")
   print ("-----------------------")
@@ -184,6 +186,9 @@ def scanauxbus(interval):
   print ("-----------------------")
   print ("Starting AUXBUS Monitor")
   print ("-----------------------")
+  printhelpmenu()
+  if connmode=="wifi":
+    keepalive=True
 
 def printactivedevices():
   print ("-----------------------")
@@ -192,6 +197,19 @@ def printactivedevices():
   for device in activedevices:
     output = str(activedevices.index(device))+ ") " + devices[int(device,16)] + " (" + str(device) + ") "
     print (output)
+
+def printhelpmenu():
+  print ("-----------------------")
+  print ("      Commands         ")
+  print ("-----------------------")
+  print ("d) Show Device List    ")
+  print ("c) Send Command to Device")
+  print ("k) Toggle Keepalive Send")
+  print ("x) Disable Keyboard Input")
+  print ("h) Print this menu     ")
+  print ("q) Quit                ")
+  print ("-----------------------")
+
 
 def transmitmsg(receiver,command):
     data = sendmsg(receiver,command)
@@ -272,14 +290,19 @@ def initializeconn():
             data = ser.read(ser.inWaiting())
 
 def closeconn():
-    if connmode=='wifi': 
-        sock.close()
-    if connmode=='serial' or connmode=='hc':
-        ser.close()
+  print ("-----------------------")
+  print ("      Closing          ")
+  print ("-----------------------")
+  if connmode=='wifi': 
+    sock.close()
+  if connmode=='serial' or connmode=='hc':
+    ser.close()
 
 def launchthreads():
     global t0,t1,t2
     global keepalive
+
+    keepalive = False
     
     t0 = threading.Thread(target=receivedata)
     t0.daemon = True
@@ -287,25 +310,28 @@ def launchthreads():
 
     t1 = threading.Thread(target=scanauxbus, args = (1,))
     t1.start()
-    
-    keepalive = False
         
     t2 = threading.Thread(target=keep_alive, args = (KEEP_ALIVE_INTERVAL,))
     t2.daemon = True
     t2.start()
 
-if len(sys.argv)==3:
-    connmode = str(sys.argv[1])
-    port = str(sys.argv[2])
-    if connmode=='wifi': 
-        SERVER_IP = port
-    if connmode=='serial' or connmode=='hc':
-        COM_PORT = port  
 
-initializeconn()
-launchthreads()
+def execute_code(connmodearg, port):
+  global connmode
+  global SERVER_IP, COM_PORT
+  global keepalive
 
-while True:
+  connmode = connmodearg
+
+  if connmode=='wifi': 
+    SERVER_IP = port
+  if connmode=='serial' or connmode=='hc':
+    COM_PORT = port
+
+  initializeconn()
+  launchthreads()
+
+  while True:
     if keyboard.read_key() == "d":
         printactivedevices()
 
@@ -328,6 +354,7 @@ while True:
     if keyboard.read_key() == "x":
         print ("-----------------------")
         print ("   Key Input Disable   ")
+        print ("  Press y to Reenable  ")
         print ("-----------------------")
         while (keyboard.read_key() != "y"):
             True
@@ -344,6 +371,20 @@ while True:
         else:
             keepalive=True
             print ("   Keepalive Enabled    ")
+    if keyboard.read_key() == "h":
+        printhelpmenu()
+    if keyboard.read_key() == "q":
+        break
     time.sleep(.1)
+  closeconn()
 
-closeconn()
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('connmode', help='connection mode (wifi / serial / hc)')
+    parser.add_argument('port', help='connection port (ip address / COM Port')
+    args = parser.parse_args()
+    execute_code(args.connmode, args.port)
+
+if __name__ == '__main__':
+    main()
+
