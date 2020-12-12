@@ -14,14 +14,14 @@ pip install -r requirements.txt
 
 ### Usage
 
-python celestron.py connmode port
+python celestron.py <connmode> <port>
 
-connmode
+<connmode>  <br />
 wifi - Use TCP-IP connection  <br />
 serial - Use PC port of mount <br />
 hc - Use hand controller USB connection - Will disable the hand controller as will put it in serial passthrough mode. <br />
 
-port
+<port>  <br />
 wifi - Use IP address of the Skyportal adapter <br />
        AP Mode = 1.2.3.4 <br />
        Client Mode = Custom Address <br />
