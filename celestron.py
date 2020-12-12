@@ -120,11 +120,11 @@ def decodemsg (msg):
         sum=sum&255
         if checksum == sum:
           checksumok = 1
-    if sender not in controllers:
-       device = sender
-    else:
-       device = receiver
     if checksumok:
+      if sender not in controllers:
+        device = sender
+      else:
+        device = receiver
       if len(commandvalue)>0:
         if hex(command) == '0xfe':
           commandvalue = '.'.join([format(int(c, 16)) for c in commandvalue])
@@ -146,10 +146,10 @@ def decodemsg (msg):
 def processmsgqueue():
   global msgqueue
   if len(msgqueue)>1:
-    while msgqueue[0:2] != str(hex(preamble))[2:]:
-      msgqueue=msgqueue[2:]
+    while len(msgqueue)>1 and msgqueue[0:2] != str(hex(preamble))[2:]:
+      msgqueue=msgqueue[1:]
   emptyqueue=0
-  while len(msgqueue)>=(2*6) and emptyqueue==0:
+  while len(msgqueue)>=(2*6) and msgqueue[0:2] == str(hex(preamble))[2:] and emptyqueue==0:
     length = int(msgqueue[2:4],16)
     if len(msgqueue)>=(2*(length+3)):
       decodemsg(msgqueue[0:2*(length+3)])
