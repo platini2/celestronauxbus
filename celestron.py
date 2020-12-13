@@ -24,6 +24,7 @@ devices = { 0x01 : 'Main Board / Interconnection',
             0xb0 : 'GPS',
             0xb3 : 'Skyportal Accessory',
             0xb4 : 'Starsense Camera',
+            0xb5 : 'Nexstar EVO WiFi',
             0xb6 : 'Battery Power Controller',
             0xb7 : 'Charge Port',
             0xbf : 'Mount Lights'}
@@ -87,7 +88,11 @@ commands = { (0x01, 0xfe) : 'MB_GET_FW_VER',
             (0xb0, 0x37) : 'GPS_LINKED',
             (0xb0, 0xfe) : 'GPS_GET_FW_VER',
             (0xb3, 0xfe) : 'WIFI_GET_FW_VER',
-            (0xb4, 0xfe) : 'SS_GET_FW_VER'}
+            (0xb4, 0xfe) : 'SS_GET_FW_VER',
+            (0xb5, 0xfe) : 'WIFI_GET_FW_VER',
+            (0xb6, 0xfe) : 'BAT_GET_FW_VER',
+            (0xb7, 0xfe) : 'CHG_GET_FW_VER',
+            (0xbf, 0xfe) : 'LIGHT_GET_FW_VER'}
 
 SERVER_IP = '1.2.3.4'
 SERVER_PORT = 2000
