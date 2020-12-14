@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+
+"""Celestron.py: Celestron AUXBUS Scanner"""
+
 import sys, getopt
 import socket
 import time
@@ -41,9 +44,21 @@ commands = { (0x01, 0xfe) : 'MB_GET_FW_VER',
             (0x0e, 0xfe) : 'NXS_GET_FW_VER',
             (0x10, 0x01) : 'MC_GET_POSITION', 
             (0x10, 0x02) : 'MC_GOTO_FAST', 
+            (0x10, 0x04) : 'MC_SET_POSITION', 
             (0x10, 0x05) : 'MC_GET_ANGLE_DATA',
             (0x10, 0x06) : 'MC_SET_POS_GUIDERATE',
+            (0x10, 0x07) : 'MC_SET_NEG_GUIDERATE',
+            (0x10, 0x0b) : 'MC_LEVEL_START',
+            (0x10, 0x0c) : 'MC_PEC_RECORD_START',
+            (0x10, 0x0d) : 'MC_PEC_PLAYBACK',
+            (0x10, 0x10) : 'MC_SET_POS_BACKLASH',
+            (0x10, 0x11) : 'MC_SET_NEG_BACKLASH',
+            (0x10, 0x12) : 'MC_LEVEL_DONE',   
             (0x10, 0x13) : 'MC_SLEW_DONE',
+            (0x10, 0x14) : 'MC_XXXX',
+            (0x10, 0x15) : 'MC_PEC_RECORD_DONE',
+            (0x10, 0x16) : 'MC_PEC_RECORD_STOP',
+            (0x10, 0x17) : 'MC_GOTO_SLOW',
             (0x10, 0x21) : 'MC_GET_MAX_SLEW_RATE',
             (0x10, 0x23) : 'MC_GET_MAX_RATE',
             (0x10, 0x24) : 'MC_MOVE_POS',
@@ -445,4 +460,14 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+__author__ = "Patricio Latini"
+__copyright__ = "Copyright 2020, Patricio Latini"
+__credits__ = "Patricio Latini"
+__license__ = "GPL"
+__version__ = "0.4.1"
+__maintainer__ = "Patricio Latini"
+__email__ = "p_latini@hotmail.com"
+__status__ = "Production"
+
 
