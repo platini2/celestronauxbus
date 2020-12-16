@@ -19,15 +19,18 @@ emulategps = False
 
 preamble = 0x3b
 
-devices = { 0x01 : 'Main Board / Interconnection',
+devices = {
+            0x01 : 'Main Board',
             0x04 : 'Nexstar HC',
             0x0d : 'Nexstar+ HC',
             0x0e : 'Starsense HC',
             0x10 : 'AZM MC',
             0x11 : 'ALT MC', 
-            0x12 : 'Focuser', 
+            0x12 : 'Focuser',
+            0x17 : '?????', 
             0x20 : 'Skyportal APP',
             0xb0 : 'GPS',
+            0xb2 : 'RTC',
             0xb3 : 'Skyportal Accessory',
             0xb4 : 'Starsense Camera',
             0xb5 : 'Nextstar EVO WiFi',
@@ -38,7 +41,8 @@ devices = { 0x01 : 'Main Board / Interconnection',
 controllers = [ 0x04 , 0x0d , 0x0e , 0x20 ]
 activedevices = []
 
-commands = { (0x01, 0xfe) : 'MB_GET_FW_VER', 
+commands = {  
+            (0x01, 0xfe) : 'MB_GET_FW_VER', 
             (0x04, 0xfe) : 'NXS_GET_FW_VER',
             (0x0d, 0xfe) : 'NXS_GET_FW_VER',
             (0x0e, 0xfe) : 'NXS_GET_FW_VER',
@@ -96,6 +100,7 @@ commands = { (0x01, 0xfe) : 'MB_GET_FW_VER',
             (0x12, 0x2c) : 'FOCUS_XXX',
             (0x12, 0x3b) : 'FOCUS_XXX',
             (0x12, 0xfe) : 'FUCUS_GET_FW_VER',
+            (0x17, 0x10) : '?????_????',
             (0x20, 0xfe) : 'NXS_GET_FW_VER',
             (0xb0, 0x01) : 'GPS_GET_LAT',    
             (0xb0, 0x02) : 'GPS_GET_LONG',
@@ -108,8 +113,12 @@ commands = { (0x01, 0xfe) : 'MB_GET_FW_VER',
             (0xb3, 0xfe) : 'WIFI_GET_FW_VER',
             (0xb4, 0xfe) : 'SS_GET_FW_VER',
             (0xb5, 0xfe) : 'WIFI_GET_FW_VER',
+            (0xb6, 0x10) : 'BAT_GET_VOLTAGE',
+            (0xb6, 0x18) : 'BAT_GET_CURRENT',
             (0xb6, 0xfe) : 'BAT_GET_FW_VER',
+            (0xb7, 0x10) : 'CHG_GET_MODE',
             (0xb7, 0xfe) : 'CHG_GET_FW_VER',
+            (0xbf, 0x10) : 'LIGHT_GET_LEVEL',
             (0xbf, 0xfe) : 'LIGHT_GET_FW_VER'}
 
 SERVER_IP = '1.2.3.4'
@@ -232,14 +241,14 @@ def sendmsg(sender,receiver,command,value):
   hexoutput = binascii.unhexlify(output)
   return hexoutput
 
-def scanauxbus(interval):
+def scanauxbus():
   global keepalive
   print ("-----------------------")
   print ("Initiating AUXBUS SCAN ")
   print ("-----------------------")
   for device in devices:
     transmitmsg('',device,0xfe,'')
-  time.sleep(3)
+  time.sleep(1.5)
   print ("-----------------------")
   print (" Finished AUXBUS SCAN  ")
   print ("-----------------------")
@@ -247,7 +256,6 @@ def scanauxbus(interval):
   print ("-----------------------")
   print ("Starting AUXBUS Monitor")
   print ("-----------------------")
-  printhelpmenu()
   if connmode=="wifi":
     keepalive=True
 
@@ -266,7 +274,8 @@ def printhelpmenu():
   print ("d) Show Device List    ")
   print ("c) Send Command to Device")
   print ("k) Toggle Keepalive Send")
-  print ("g) Toggle GPS Emulator")
+  print ("s) Rescan AUXBUS       ")  
+  print ("g) Toggle GPS Emulator ")
   print ("h) Print this menu     ")
   print ("q) Quit                ")
   print ("-----------------------")
@@ -375,9 +384,6 @@ def launchthreads():
     t0.daemon = True
     t0.start()
 
-    t1 = threading.Thread(target=scanauxbus, args = (1,))
-    t1.start()
-        
     t2 = threading.Thread(target=keep_alive, args = (KEEP_ALIVE_INTERVAL,))
     t2.daemon = True
     t2.start()
@@ -399,6 +405,8 @@ def execute_code(connmodearg, port):
 
   initializeconn()
   launchthreads()
+  scanauxbus()
+  printhelpmenu()      
 
   while True:
     inputkey = input("Enter Command:")
@@ -444,6 +452,9 @@ def execute_code(connmodearg, port):
             gpslon=float(input("Enter GPS Longitude in Decimal Format: "))
             emulategps=True
             print ("  GPS Emulation Enabled    ")
+    if inputkey == "s":
+        activedevices = []
+        scanauxbus()    
     if inputkey == "h":
         printhelpmenu()
     if inputkey == "q":
