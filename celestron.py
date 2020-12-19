@@ -1,6 +1,14 @@
 #!/usr/bin/env python
 
 """Celestron.py: Celestron AUXBUS Scanner"""
+__author__ = "Patricio Latini"
+__copyright__ = "Copyright 2020, Patricio Latini"
+__credits__ = "Patricio Latini"
+__license__ = "GPL"
+__version__ = "0.4.5"
+__maintainer__ = "Patricio Latini"
+__email__ = "p_latini@hotmail.com"
+__status__ = "Production"
 
 import sys, getopt
 import socket
@@ -169,7 +177,15 @@ def decodemsg (msg):
           commandtext = commands[(device,command)]
       else:
           commandtext = 'UNKNOWN'
-      output = devices[sender] + " (" + str(hex(sender)) + ") " + "-> " + devices[receiver] + " (" + str(hex(receiver)) + ") " + "--- " + commandtext + " (" + str(hex(command)) + ") " + "--- " + str(commandvalue)
+      if sender in devices:
+          sendertext = devices[sender]
+      else: 
+          sendertext = 'UNKNOWN'
+      if receiver in devices:
+          receivertext = devices[receiver]
+      else: 
+          receivertext = 'UNKNOWN'
+      output = sendertext + " (" + str(hex(sender)) + ") " + "-> " + receivertext + " (" + str(hex(receiver)) + ") " + "--- " + commandtext + " (" + str(hex(command)) + ") " + "--- " + str(commandvalue)
       print (output)
       if emulategps:
         global gpslat,gpslon    
@@ -403,6 +419,10 @@ def execute_code(connmodearg, port):
   if connmode=='serial' or connmode=='hc':
     COM_PORT = port
 
+  print ("-----------------------")
+  print (" AUXBUS SCANNER VERSION",__version__)
+  print ("-----------------------")
+
   initializeconn()
   launchthreads()
   scanauxbus()
@@ -472,13 +492,6 @@ def main():
 if __name__ == '__main__':
     main()
 
-__author__ = "Patricio Latini"
-__copyright__ = "Copyright 2020, Patricio Latini"
-__credits__ = "Patricio Latini"
-__license__ = "GPL"
-__version__ = "0.4.1"
-__maintainer__ = "Patricio Latini"
-__email__ = "p_latini@hotmail.com"
-__status__ = "Production"
+
 
 
