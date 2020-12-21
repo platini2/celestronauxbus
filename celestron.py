@@ -37,6 +37,10 @@ devices = {
             0x12 : 'Focuser',
             0x17 : '?????', 
             0x20 : 'Skyportal APP',
+            0x21 : 'CFM',
+            0x30 : 'CGX RA Switch',
+            0x31 : 'CGX DEC Switch',
+            0x32 : 'CGX DEC Autoguide Port',
             0xb0 : 'GPS',
             0xb2 : 'RTC',
             0xb3 : 'Skyportal Accessory',
@@ -44,9 +48,10 @@ devices = {
             0xb5 : 'Nextstar EVO WiFi',
             0xb6 : 'Battery Power Controller',
             0xb7 : 'Charge Port',
+            0xb8 : 'Starsense Camera SkyW',
             0xbf : 'Mount Lights'}
 
-controllers = [ 0x04 , 0x0d , 0x0e , 0x20 ]
+controllers = [ 0x04 , 0x0d , 0x0e , 0x20, 0x21 ]
 activedevices = []
 
 commands = {  
