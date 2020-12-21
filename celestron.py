@@ -411,6 +411,7 @@ def execute_code(connmodearg, port):
   global SERVER_IP, COM_PORT
   global keepalive
   global gpslat,gpslon
+  global activedevices
 
   connmode = connmodearg
 
