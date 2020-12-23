@@ -5,7 +5,7 @@ __author__ = "Patricio Latini"
 __copyright__ = "Copyright 2020, Patricio Latini"
 __credits__ = "Patricio Latini"
 __license__ = "GPL"
-__version__ = "0.4.5"
+__version__ = "0.4.8"
 __maintainer__ = "Patricio Latini"
 __email__ = "p_latini@hotmail.com"
 __status__ = "Production"
@@ -38,6 +38,7 @@ devices = {
             0x17 : '?????', 
             0x20 : 'Skyportal APP',
             0x21 : 'CFM',
+            0x22 : 'AUXBUS Scanner',
             0x30 : 'CGX RA Switch',
             0x31 : 'CGX DEC Switch',
             0x32 : 'CGX DEC Autoguide Port',
@@ -51,7 +52,7 @@ devices = {
             0xb8 : 'Starsense Camera SkyW',
             0xbf : 'Mount Lights'}
 
-controllers = [ 0x04 , 0x0d , 0x0e , 0x20, 0x21 ]
+controllers = [ 0x04 , 0x0d , 0x0e , 0x20, 0x21, 0x22 ]
 activedevices = []
 
 commands = {  
@@ -242,9 +243,9 @@ def sendmsg(sender,receiver,command,value):
   byte=0
   if sender=='':
     if connmode=='wifi' or connmode=='hc' :
-        sender = 0x20
+        sender = 0x22
     if connmode=='serial':
-        sender = 0x04      
+        sender = 0x22      
   for c in range(0,len(value),2):
       byte = int(c/2+1)
       value2 = int(value[c:c+2],16)
