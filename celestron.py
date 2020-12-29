@@ -5,7 +5,7 @@ __author__ = "Patricio Latini"
 __copyright__ = "Copyright 2020, Patricio Latini"
 __credits__ = "Patricio Latini"
 __license__ = "GPL"
-__version__ = "0.4.8"
+__version__ = "0.5.0"
 __maintainer__ = "Patricio Latini"
 __email__ = "p_latini@hotmail.com"
 __status__ = "Production"
@@ -36,7 +36,7 @@ devices = {
             0x11 : 'ALT MC', 
             0x12 : 'Focuser',
             0x17 : '?????', 
-            0x20 : 'Skyportal APP',
+            0x20 : 'CPWI',
             0x21 : 'CFM',
             0x22 : 'AUXBUS Scanner',
             0x30 : 'CGX RA Switch',
@@ -263,21 +263,22 @@ def sendmsg(sender,receiver,command,value):
   hexoutput = binascii.unhexlify(output)
   return hexoutput
 
-def scanauxbus():
+def scanauxbus(target):
   global keepalive
   print ("-----------------------")
   print ("Initiating AUXBUS SCAN ")
   print ("-----------------------")
-  for device in devices:
-    transmitmsg('',device,0xfe,'')
+  if target=='known':
+    for device in devices:
+      transmitmsg('',device,0xfe,'')
+  if target=='all':
+    for device in range(0x01,0xff):
+      transmitmsg('',device,0xfe,'')
   time.sleep(1.5)
   print ("-----------------------")
   print (" Finished AUXBUS SCAN  ")
   print ("-----------------------")
   printactivedevices()
-  print ("-----------------------")
-  print ("Starting AUXBUS Monitor")
-  print ("-----------------------")
   if connmode=="wifi":
     keepalive=True
 
@@ -296,7 +297,8 @@ def printhelpmenu():
   print ("d) Show Device List    ")
   print ("c) Send Command to Device")
   print ("k) Toggle Keepalive Send")
-  print ("s) Rescan AUXBUS       ")  
+  print ("s) Rescan AUXBUS       ")
+  print ("a) Scan AUXBUS for Unknown")  
   print ("g) Toggle GPS Emulator ")
   print ("h) Print this menu     ")
   print ("q) Quit                ")
@@ -432,7 +434,10 @@ def execute_code(connmodearg, port):
 
   initializeconn()
   launchthreads()
-  scanauxbus()
+  scanauxbus('known')
+  print ("-----------------------")
+  print ("Starting AUXBUS Monitor")
+  print ("-----------------------")
   printhelpmenu()      
 
   while True:
@@ -481,7 +486,10 @@ def execute_code(connmodearg, port):
             print ("  GPS Emulation Enabled    ")
     if inputkey == "s":
         activedevices = []
-        scanauxbus()    
+        scanauxbus('known')
+    if inputkey == "a":
+        activedevices = []
+        scanauxbus('all') 
     if inputkey == "h":
         printhelpmenu()
     if inputkey == "q":
