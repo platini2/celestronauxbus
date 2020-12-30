@@ -312,7 +312,7 @@ def printactivedevices():
   if mount in mounts:
     mounttext = mounts[mount]
   else: 
-    mounttext = 'UNKNOWN' + " (" + str(hex(mount)) + ")" 
+    mounttext = 'UNKNOWN' + " (" + str(hex(mount))+ ")" if len(mount)>0 else 'NOT DETECTED'  
   print ("-----------------------")
   print (" Mount :", mounttext )
   print ("-----------------------")
