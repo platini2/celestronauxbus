@@ -5,7 +5,7 @@ __author__ = "Patricio Latini"
 __copyright__ = "Copyright 2020, Patricio Latini"
 __credits__ = "Patricio Latini"
 __license__ = "GPL"
-__version__ = "0.6.1"
+__version__ = "0.6.5"
 __maintainer__ = "Patricio Latini"
 __email__ = "p_latini@hotmail.com"
 __status__ = "Production"
@@ -211,7 +211,7 @@ def decodemsg (msg):
           receivertext = devices[receiver]
       else: 
           receivertext = 'UNKNOWN'
-      output = sendertext + " (" + str(hex(sender)) + ") " + "-> " + receivertext + " (" + str(hex(receiver)) + ") " + "--- " + commandtext + " (" + str(hex(command)) + ") " + "--- " + str(commandvalue)
+      output = str(round(time.time()-starttime,6)) + " - " + sendertext + " (" + str(hex(sender)) + ") " + "-> " + receivertext + " (" + str(hex(receiver)) + ") " + "--- " + commandtext + " (" + str(hex(command)) + ") " + "--- " + str(commandvalue)
       print (output)
       if emulategps:
         global gpslat,gpslon    
@@ -329,13 +329,14 @@ def printhelpmenu():
   print ("-----------------------")
   print ("      Commands         ")
   print ("-----------------------")
-  print ("d) Show Device List    ")
-  print ("c) Send Command to Device")
-  print ("k) Toggle Keepalive Send")
-  print ("s) Rescan AUXBUS       ")
-  print ("a) Scan AUXBUS for Unknown")  
-  print ("g) Toggle GPS Emulator ")
-  print ("h) Print this menu     ")
+  print ("d) show Device list    ")
+  print ("c) send Command to device")
+  print ("k) toggle Keepalive send")
+  print ("s) reScan AUXBUS       ")
+  print ("a) rescan AUXBUS for All")  
+  print ("g) toggle GPS simulator")
+  print ("r) Reset Packet Timer  ")  
+  print ("h) print this Help menu")
   print ("q) Quit                ")
   print ("-----------------------")
 
@@ -457,6 +458,7 @@ def execute_code(connmodearg, port):
   global gpslat,gpslon
   global activedevices
   global mount
+  global starttime
 
   connmode = connmodearg
 
@@ -465,11 +467,11 @@ def execute_code(connmodearg, port):
   if connmode=='serial' or connmode=='hc':
     COM_PORT = port
 
-  print ("-----------------------")
+  print ("-------------------------------")
   print (" AUXBUS SCANNER VERSION",__version__)
-  print ("-----------------------")
-
+  print ("-------------------------------") 
   initializeconn()
+  starttime=time.time()
   launchthreads()
   scanauxbus('known')
   print ("-----------------------")
@@ -532,6 +534,8 @@ def execute_code(connmodearg, port):
         scanauxbus('all')
     if inputkey == "i":
         identifymount()
+    if inputkey == "r":
+        starttime=time.time()
     if inputkey == "h":
         printhelpmenu()
     if inputkey == "q":
