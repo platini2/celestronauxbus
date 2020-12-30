@@ -24,8 +24,14 @@ global msgqueue
 msgqueue = ''
 global emulategps
 emulategps = False
+global mount
+mount = ''
 
 preamble = 0x3b
+
+mounts = {
+            0x1189 : 'CPC Deluxe',
+            0x0783 : 'Nexstar SLT'}
 
 devices = {
             0x01 : 'Main Board',
@@ -63,7 +69,7 @@ commands = {
             (0x10, 0x01) : 'MC_GET_POSITION', 
             (0x10, 0x02) : 'MC_GOTO_FAST', 
             (0x10, 0x04) : 'MC_SET_POSITION', 
-            (0x10, 0x05) : 'MC_GET_ANGLE_DATA',
+            (0x10, 0x05) : 'MC_GET_MODEL',
             (0x10, 0x06) : 'MC_SET_POS_GUIDERATE',
             (0x10, 0x07) : 'MC_SET_NEG_GUIDERATE',
             (0x10, 0x0b) : 'MC_LEVEL_START',
@@ -91,7 +97,7 @@ commands = {
             (0x10, 0xfe) : 'MC_GET_FW_VER',
             (0x11, 0x01) : 'MC_GET_POSITION', 
             (0x11, 0x02) : 'MC_GOTO_FAST', 
-            (0x11, 0x05) : 'MC_GET_ANGLE_DATA',
+            (0x11, 0x05) : 'MC_GET_MODEL',
             (0x11, 0x06) : 'MC_SET_POS_GUIDERATE',
             (0x11, 0x13) : 'MC_SLEW_DONE',
             (0x11, 0x21) : 'MC_GET_MAX_SLEW_RATE',
@@ -141,6 +147,7 @@ BUFFER_SIZE = 1024
 KEEP_ALIVE_INTERVAL = 10
 
 def decodemsg (msg):
+    global mount
     byte=0
     sum=0
     checksumok = 0
@@ -179,6 +186,8 @@ def decodemsg (msg):
         else:
           commandvaluehex = ''.join([format(int(c, 16), '02x') for c in commandvalue])
           commandvalue = (int(commandvaluehex,16))
+          if hex(command) == '0x5' and hex(sender) == '0x10':
+            mount = commandvalue
       if (device,command) in commands:
           commandtext = commands[(device,command)]
       else:
@@ -274,7 +283,8 @@ def scanauxbus(target):
   if target=='all':
     for device in range(0x01,0xff):
       transmitmsg('',device,0xfe,'')
-  time.sleep(1.5)
+  identifymount()
+  time.sleep(1.5)  
   print ("-----------------------")
   print (" Finished AUXBUS SCAN  ")
   print ("-----------------------")
@@ -282,13 +292,26 @@ def scanauxbus(target):
   if connmode=="wifi":
     keepalive=True
 
+def identifymount():
+  device = 0x10
+  if str(hex(device)) in activedevices:
+    transmitmsg('',device,0x05,'')
+
 def printactivedevices():
+  if mount in mounts:
+    mounttext = mounts[mount]
+  else: 
+    mounttext = 'UNKNOWN' + " (" + str(hex(mount)) + ")" 
+  print ("-----------------------")
+  print (" Mount :", mounttext )
+  print ("-----------------------")
   print ("-----------------------")
   print ("   Detected Devices    ")
   print ("-----------------------")
   for device in activedevices:
     output = str(activedevices.index(device))+ ") " + devices[int(device,16)] + " (" + str(device) + ") "
     print (output)
+  
 
 def printhelpmenu():
   print ("-----------------------")
@@ -420,6 +443,7 @@ def execute_code(connmodearg, port):
   global keepalive
   global gpslat,gpslon
   global activedevices
+  global mount
 
   connmode = connmodearg
 
@@ -486,10 +510,14 @@ def execute_code(connmodearg, port):
             print ("  GPS Emulation Enabled    ")
     if inputkey == "s":
         activedevices = []
+        mount = ''
         scanauxbus('known')
     if inputkey == "a":
         activedevices = []
-        scanauxbus('all') 
+        mount = ''
+        scanauxbus('all')
+    if inputkey == "i":
+        identifymount()
     if inputkey == "h":
         printhelpmenu()
     if inputkey == "q":
