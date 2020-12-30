@@ -5,7 +5,7 @@ __author__ = "Patricio Latini"
 __copyright__ = "Copyright 2020, Patricio Latini"
 __credits__ = "Patricio Latini"
 __license__ = "GPL"
-__version__ = "0.6.0"
+__version__ = "0.6.1"
 __maintainer__ = "Patricio Latini"
 __email__ = "p_latini@hotmail.com"
 __status__ = "Production"
@@ -418,6 +418,7 @@ def initializeconn():
             ser.close
             ser.baudrate = 115200
             ser.open
+            time.sleep(1)
             data = b'\x0a\x00\x02\x08\x00\x4b\x00\x00\xd0\xc0'
             ser.write(data)
             time.sleep(.5)
