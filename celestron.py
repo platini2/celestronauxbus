@@ -5,7 +5,7 @@ __author__ = "Patricio Latini"
 __copyright__ = "Copyright 2020, Patricio Latini"
 __credits__ = "Patricio Latini"
 __license__ = "GPL"
-__version__ = "0.5.2"
+__version__ = "0.6.0"
 __maintainer__ = "Patricio Latini"
 __email__ = "p_latini@hotmail.com"
 __status__ = "Production"
@@ -27,6 +27,7 @@ emulategps = False
 global mount
 mount = ''
 
+scannerid = 0x22
 preamble = 0x3b
 
 mounts = {
@@ -60,7 +61,7 @@ devices = {
             0xbf : 'Mount Lights'}
 
 controllers = [ 0x04 , 0x0d , 0x0e , 0x20, 0x21, 0x22 ]
-activedevices = []
+activedevices = {}
 
 commands = {  
             (0x01, 0xfe) : 'MB_GET_FW_VER', 
@@ -175,15 +176,24 @@ def decodemsg (msg):
         if checksum == sum:
           checksumok = 1
     if checksumok:
-      if sender not in controllers:
-        device = sender
+      if (sender == scannerid or receiver == scannerid):
+        if sender == scannerid:
+          device = receiver
+        else:
+          device = sender
       else:
-        device = receiver
+        if sender not in controllers:
+          device = sender
+        else:
+          device = receiver
       if len(commandvalue)>0:
         if hex(command) == '0xfe':
-          commandvalue = '.'.join([format(int(c, 16)) for c in commandvalue])
+          if len(commandvalue)<4:
+            commandvalue = '.'.join([format(int(c, 16)) for c in commandvalue])
+          else:
+            commandvalue = format(int(commandvalue[0], 16)) + '.' + format(int(commandvalue[1], 16))+ '.' + str(int(format(int(commandvalue[2],16), '02x')+format(int(commandvalue[3],16), '02x'),16))
           if len(commandvalue)>0:
-            activedevices.append(hex(sender)) if hex(sender) not in activedevices else activedevices
+            activedevices.update({hex(sender):commandvalue}) if hex(sender) not in activedevices else activedevices
         else:
           commandvaluehex = ''.join([format(int(c, 16), '02x') for c in commandvalue])
           commandvalue = (int(commandvaluehex,16))
@@ -253,9 +263,9 @@ def sendmsg(sender,receiver,command,value):
   byte=0
   if sender=='':
     if connmode=='wifi' or connmode=='hc' :
-        sender = 0x22
+        sender = scannerid
     if connmode=='serial':
-        sender = 0x22      
+        sender = scannerid      
   for c in range(0,len(value),2):
       byte = int(c/2+1)
       value2 = int(value[c:c+2],16)
@@ -309,8 +319,9 @@ def printactivedevices():
   print ("-----------------------")
   print ("   Detected Devices    ")
   print ("-----------------------")
+  listactivedevices=list(activedevices)
   for device in activedevices:
-    output = str(activedevices.index(device))+ ") " + devices[int(device,16)] + " (" + str(device) + ") "
+    output = str(listactivedevices.index(device))+ ") " + devices[int(device,16)] + " (" + str(device) + ") - " + activedevices[device]
     print (output)
   
 
@@ -476,7 +487,8 @@ def execute_code(connmodearg, port):
         print ("-----------------------")
         print ("Choose device")
         key1 = input("Enter Device:")
-        filtercommands=[(k[1], v) for k, v in commands.items() if k[0]==int(activedevices[int(key1)],16)]
+        listactivedevices=list(activedevices)
+        filtercommands=[(k[1], v) for k, v in commands.items() if k[0]==int(listactivedevices[int(key1)],16)]
         for command in filtercommands:
             output = chr(97+filtercommands.index(command)) + ") " + str(hex(command[0])) + " (" + str(command[1]) + ") "
             print (output)
@@ -484,7 +496,7 @@ def execute_code(connmodearg, port):
         print ("-----------------------")
         print ("Choose command")
         key2 = input("Enter Command:")
-        transmitmsg('',int(activedevices[int(key1)],16),filtercommands[ord(key2)-97][0],'')
+        transmitmsg('',int(listactivedevices[int(key1)],16),filtercommands[ord(key2)-97][0],'')
 
     if inputkey == "k":
         print ("-----------------------")
@@ -504,17 +516,17 @@ def execute_code(connmodearg, port):
             emulategps=False
             print ("  GPS Emulation Disabled    ")
         else:
-            activedevices.append(hex(176)) if hex(176) not in activedevices else activedevices
+            activedevices.update({hex(176):'11.1'}) if hex(176) not in activedevices else activedevices
             gpslat=float(input("Enter GPS Latitude in Decimal Format: "))
             gpslon=float(input("Enter GPS Longitude in Decimal Format: "))
             emulategps=True
             print ("  GPS Emulation Enabled    ")
     if inputkey == "s":
-        activedevices = []
+        activedevices = {}
         mount = ''
         scanauxbus('known')
     if inputkey == "a":
-        activedevices = []
+        activedevices = {}
         mount = ''
         scanauxbus('all')
     if inputkey == "i":
