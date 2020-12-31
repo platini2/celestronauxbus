@@ -5,7 +5,7 @@ __author__ = "Patricio Latini"
 __copyright__ = "Copyright 2020, Patricio Latini"
 __credits__ = "Patricio Latini"
 __license__ = "GPL"
-__version__ = "0.6.5"
+__version__ = "0.6.8"
 __maintainer__ = "Patricio Latini"
 __email__ = "p_latini@hotmail.com"
 __status__ = "Production"
@@ -20,6 +20,8 @@ import keyboard
 import argparse
 from datetime import datetime,timezone
 
+global endthread
+endthread = False
 global msgqueue
 msgqueue = ''
 global emulategps
@@ -145,7 +147,7 @@ commands = {
 
 SERVER_IP = '1.2.3.4'
 SERVER_PORT = 2000
-BUFFER_SIZE = 1024
+BUFFER_SIZE = 100
 KEEP_ALIVE_INTERVAL = 10
 
 def decodemsg (msg):
@@ -360,15 +362,18 @@ def transmitmsg(sender,receiver,command,value):
     time.sleep(0.25)
 
 def keep_alive(interval):
-    while True:
+    global endthread
+    while not endthread:
         if keepalive:
             transmitmsg('',0x10,0xfe,'')
         time.sleep(interval)
+    print ("Finished Keep Alive")
 
 def receivedata():
   global msgqueue
+  global endthread
   data=''
-  while True:
+  while not endthread:
       if connmode=='wifi':
         data = sock.recv(BUFFER_SIZE)
       if connmode=='serial' or connmode=='hc':
@@ -380,6 +385,8 @@ def receivedata():
           msgqueue = msgqueue + str(stringdata,'utf-8')
           processmsgqueue()
           data=''
+  print ("Finished Receive Data")
+
 
 def initializeconn():
     if connmode=='wifi':
@@ -459,6 +466,7 @@ def execute_code(connmodearg, port):
   global activedevices
   global mount
   global starttime
+  global endthread
 
   connmode = connmodearg
 
@@ -539,9 +547,13 @@ def execute_code(connmodearg, port):
     if inputkey == "h":
         printhelpmenu()
     if inputkey == "q":
+        endthread = True
+        transmitmsg('',0x10,0xfe,'')
+        t0.join()
+        t2.join()
+        closeconn()
         break
     time.sleep(.1)
-  closeconn()
 
 def main():
     parser = argparse.ArgumentParser()
