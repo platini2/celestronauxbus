@@ -5,7 +5,7 @@ __author__ = "Patricio Latini"
 __copyright__ = "Copyright 2020, Patricio Latini"
 __credits__ = "Patricio Latini"
 __license__ = "GPL"
-__version__ = "0.6.8"
+__version__ = "0.6.9"
 __maintainer__ = "Patricio Latini"
 __email__ = "p_latini@hotmail.com"
 __status__ = "Production"
@@ -28,6 +28,8 @@ global emulategps
 emulategps = False
 global mount
 mount = ''
+global verbose
+verbose = False
 
 scannerid = 0x22
 preamble = 0x3b
@@ -213,7 +215,11 @@ def decodemsg (msg):
           receivertext = devices[receiver]
       else: 
           receivertext = 'UNKNOWN'
-      output = str(round(time.time()-starttime,6)) + " - " + sendertext + " (" + str(hex(sender)) + ") " + "-> " + receivertext + " (" + str(hex(receiver)) + ") " + "--- " + commandtext + " (" + str(hex(command)) + ") " + "--- " + str(commandvalue)
+      if verbose:
+          dumptext = ' --- ' + str(msg)
+      else:
+          dumptext = ''
+      output = str(round(time.time()-starttime,6)) + " - " + sendertext + " (" + str(hex(sender)) + ") " + "-> " + receivertext + " (" + str(hex(receiver)) + ") " + "--- " + commandtext + " (" + str(hex(command)) + ") " + "--- " + str(commandvalue) + dumptext
       print (output)
       if emulategps:
         global gpslat,gpslon    
@@ -335,7 +341,8 @@ def printhelpmenu():
   print ("c) send Command to device")
   print ("k) toggle Keepalive send")
   print ("s) reScan AUXBUS       ")
-  print ("a) rescan AUXBUS for All")  
+  print ("a) rescan AUXBUS for All")
+  print ("v) toggle Verbose output")
   print ("g) toggle GPS simulator")
   print ("r) Reset Packet Timer  ")  
   print ("h) print this Help menu")
@@ -467,6 +474,7 @@ def execute_code(connmodearg, port):
   global mount
   global starttime
   global endthread
+  global verbose
 
   connmode = connmodearg
 
@@ -542,6 +550,8 @@ def execute_code(connmodearg, port):
         scanauxbus('all')
     if inputkey == "i":
         identifymount()
+    if inputkey == "v":
+        verbose = not verbose
     if inputkey == "r":
         starttime=time.time()
     if inputkey == "h":
