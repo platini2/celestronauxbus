@@ -4,8 +4,8 @@
 __author__ = "Patricio Latini"
 __copyright__ = "Copyright 2020, Patricio Latini"
 __credits__ = "Patricio Latini"
-__license__ = "GPL"
-__version__ = "0.6.9"
+__license__ = "GPLv3"
+__version__ = "0.7.0"
 __maintainer__ = "Patricio Latini"
 __email__ = "p_latini@hotmail.com"
 __status__ = "Production"
@@ -30,6 +30,8 @@ global mount
 mount = ''
 global verbose
 verbose = False
+global filecsvoutput
+filecsvoutput = False
 
 scannerid = 0x22
 preamble = 0x3b
@@ -221,6 +223,9 @@ def decodemsg (msg):
           dumptext = ''
       output = str(round(time.time()-starttime,6)) + " - " + sendertext + " (" + str(hex(sender)) + ") " + "-> " + receivertext + " (" + str(hex(receiver)) + ") " + "--- " + commandtext + " (" + str(hex(command)) + ") " + "--- " + str(commandvalue) + dumptext
       print (output)
+      if filecsvoutput:
+          fileoutput = str(round(time.time()-starttime,6)) + "," + sendertext + "," + str(hex(sender)) + ","  + receivertext + "," + str(hex(receiver)) + ","  + commandtext + "," + str(hex(command)) + "," + str(commandvalue) + "," + str(msg)
+          print(fileoutput,  file=open('auxbuslog.csv', 'a'))
       if emulategps:
         global gpslat,gpslon    
         if str(hex(receiver)) == '0xb0':
@@ -343,6 +348,7 @@ def printhelpmenu():
   print ("s) reScan AUXBUS       ")
   print ("a) rescan AUXBUS for All")
   print ("v) toggle Verbose output")
+  print ("f) toggle csv File output")
   print ("g) toggle GPS simulator")
   print ("r) Reset Packet Timer  ")  
   print ("h) print this Help menu")
@@ -475,6 +481,7 @@ def execute_code(connmodearg, port):
   global starttime
   global endthread
   global verbose
+  global filecsvoutput
 
   connmode = connmodearg
 
@@ -552,6 +559,11 @@ def execute_code(connmodearg, port):
         identifymount()
     if inputkey == "v":
         verbose = not verbose
+    if inputkey == "f":
+        filecsvoutput = not filecsvoutput
+        if filecsvoutput:
+            fileoutput = 'timestamp,'+'sender,'+'sender_id,'+'receiver,'+'receiver_id,'+'command,'+'command_id,'+'command_data,'+'raw_packet'
+            print(fileoutput,  file=open('auxbuslog.csv', 'w'))
     if inputkey == "r":
         starttime=time.time()
     if inputkey == "h":
