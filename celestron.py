@@ -5,7 +5,7 @@ __author__ = "Patricio Latini"
 __copyright__ = "Copyright 2020, Patricio Latini"
 __credits__ = "Patricio Latini"
 __license__ = "GPLv3"
-__version__ = "0.7.0"
+__version__ = "0.7.1b"
 __maintainer__ = "Patricio Latini"
 __email__ = "p_latini@hotmail.com"
 __status__ = "Production"
@@ -35,6 +35,7 @@ filecsvoutput = False
 
 scannerid = 0x22
 preamble = 0x3b
+preamble2 = 0x3c
 
 mounts = {
             0x0783 : 'Nexstar SLT',
@@ -256,20 +257,47 @@ def decodemsg (msg):
     else:
       print (hex(sender)," -> ", hex(receiver), "---", hex(command), "---", commandvalue, "CRC FAIL!")
 
+def decodemsg3c (msg):
+    byte=0
+    sum=0
+    checksumok = 0
+    commandvalue = []
+    for c in range(2,len(msg),4):
+      byte = int(c/2+1)
+      value = int(msg[c:c+4],16)
+      if (byte>1 and byte <len(msg)/2):
+        sum=sum+value
+      if (byte == 4):
+        length = value
+    output = str(round(time.time()-starttime,6)) + " - " + "Starsense Data: " + str(length) + "Bytes - Data:" + msg
+    print (output)
+    if filecsvoutput:
+        fileoutput = str(round(time.time()-starttime,6)) + "," + "Starsense Camera" + "," + "0xb4" + ","  + "All" + "," + "0x00" + ","  + "Data" + "," + "0x00" + "," + "[]" + "," + str(msg)
+        print(fileoutput,  file=open('auxbuslog.csv', 'a'))
+
+
 def processmsgqueue():
   global msgqueue
   if len(msgqueue)>1:
-    while len(msgqueue)>1 and msgqueue[0:2] != str(hex(preamble))[2:]:
+    while len(msgqueue)>1 and msgqueue[0:2] != str(hex(preamble))[2:] and msgqueue[0:2] != str(hex(preamble2))[2:]:
       msgqueue=msgqueue[1:]
   emptyqueue=0
-  while len(msgqueue)>=(2*6) and msgqueue[0:2] == str(hex(preamble))[2:] and emptyqueue==0:
-    length = int(msgqueue[2:4],16)
-    if len(msgqueue)>=(2*(length+3)):
-      decodemsg(msgqueue[0:2*(length+3)])
-      msgqueue=msgqueue[2*(length+3):]
-    else:
-      emptyqueue=1
-
+  while len(msgqueue)>=(2*6) and (msgqueue[0:2] == str(hex(preamble))[2:] or msgqueue[0:2] == str(hex(preamble2))[2:]) and emptyqueue==0:
+    if msgqueue[0:2] == str(hex(preamble))[2:]:
+        length = int(msgqueue[2:4],16)   
+        if len(msgqueue)>=(2*(length+3)):
+          decodemsg(msgqueue[0:2*(length+3)])
+          msgqueue=msgqueue[2*(length+3):]
+        else:
+          emptyqueue=1
+    if msgqueue[0:2] == str(hex(preamble2))[2:]:
+        length = int(msgqueue[6:10],16)
+        if len(msgqueue)>=(2*(length+8)):
+          decodemsg3c(msgqueue[0:2*(length+8)])
+          msgqueue=msgqueue[2*(length+8):]
+        else:
+          emptyqueue=1
+        
 def sendmsg(sender,receiver,command,value):
   global preamble
   commandvalue=[]
@@ -293,6 +321,12 @@ def sendmsg(sender,receiver,command,value):
   output3 = "{:02x}".format(summa)
   output = output1 + output2 + output3
   decodemsg(output)
+  hexoutput = binascii.unhexlify(output)
+  return hexoutput
+
+def sendmsg3c():
+  output = "3c000001b8908d6a4218df9a42c3796942e34a2c44151c6a42c7a76943e6f5694283da844376ff6942ffbf39443e556a4216505c441d4c6a4286ba2744487d6a42df4c6c4425836a42047ad44370306a4262d5f6433b020297784300404e446eba694291a9364435396a42dab89e43dcd36942eba0534491496a42c2e2024400006a42379c08447e8b6a42b10bcf4363f0694213dd1a44cc7f6a42f7771f44338069420a48164420ce6942ce5a0d44f2996942b2dda5422c1a6942e1087143d3e56a4259f90b44a6cb6942ff3f64444e2469429d6da84313496942f62d4d434e2469429d6dc44327926a4268fb4344b1db6a4232892044d8236a42cff641439d486a4200801d44b1db6a4232093f44312f6942d697ba4340386a429e7d1444498889449110204400e08944edec7843f2f66a4277f66944d9756a420000e042ee396b422dbb37439847694293c20644039a69422885cb43ce7069420080a44393827644fe3299425555694200404044abaa6a42fffff342efa6784398e9bf428bc86a4200000f4400000743008092434aba6a42db059743b5456942247ac7434aba6a4224fa89434997764401c03e44b54569424a57dd4387646942da426744d8"
+  decodemsg3c(output)
   hexoutput = binascii.unhexlify(output)
   return hexoutput
 
