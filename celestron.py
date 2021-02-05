@@ -5,7 +5,7 @@ __author__ = "Patricio Latini"
 __copyright__ = "Copyright 2020, Patricio Latini"
 __credits__ = "Patricio Latini"
 __license__ = "GPLv3"
-__version__ = "0.7.1b"
+__version__ = "0.7.2"
 __maintainer__ = "Patricio Latini"
 __email__ = "p_latini@hotmail.com"
 __status__ = "Production"
@@ -40,7 +40,8 @@ preamble2 = 0x3c
 mounts = {
             0x0783 : 'Nexstar SLT',
             0x1189 : 'CPC Deluxe',
-            0x1687 : 'Nexstar Evolution 8'}
+            0x1687 : 'Nexstar Evolution 8',
+            0x1788 : 'CGX'}
 
 devices = {
             0x01 : 'Main Board',
