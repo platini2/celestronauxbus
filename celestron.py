@@ -5,7 +5,7 @@ __author__ = "Patricio Latini"
 __copyright__ = "Copyright 2020, Patricio Latini"
 __credits__ = "Patricio Latini"
 __license__ = "GPLv3"
-__version__ = "0.7.2"
+__version__ = "0.7.3"
 __maintainer__ = "Patricio Latini"
 __email__ = "p_latini@hotmail.com"
 __status__ = "Production"
@@ -294,8 +294,8 @@ def processmsgqueue():
     if msgqueue[0:2] == str(hex(preamble2))[2:]:
         length = int(msgqueue[6:10],16)
         if len(msgqueue)>=(2*(length+8)):
-          decodemsg3c(msgqueue[0:2*(length+8)])
-          msgqueue=msgqueue[2*(length+8):]
+          decodemsg3c(msgqueue[0:2*(length+6)])
+          msgqueue=msgqueue[2*(length+6):]
         else:
           emptyqueue=1
         
