@@ -5,7 +5,7 @@ __author__ = "Patricio Latini"
 __copyright__ = "Copyright 2020, Patricio Latini"
 __credits__ = "Patricio Latini"
 __license__ = "GPLv3"
-__version__ = "0.7.3"
+__version__ = "0.7.4"
 __maintainer__ = "Patricio Latini"
 __email__ = "p_latini@hotmail.com"
 __status__ = "Production"
@@ -263,18 +263,30 @@ def decodemsg3c (msg):
     sum=0
     checksumok = 0
     commandvalue = []
-    for c in range(2,len(msg),4):
+    for c in range(2,len(msg),2):
       byte = int(c/2+1)
-      value = int(msg[c:c+4],16)
+      value = int(msg[c:c+2],16)
       if (byte>1 and byte <len(msg)/2):
         sum=sum+value
       if (byte == 4):
-        length = value
-    output = str(round(time.time()-starttime,6)) + " - " + "Starsense Data: " + str(length) + "Bytes - Data:" + msg
-    print (output)
-    if filecsvoutput:
-        fileoutput = str(round(time.time()-starttime,6)) + "," + "Starsense Camera" + "," + "0xb4" + ","  + "All" + "," + "0x00" + ","  + "Data" + "," + "0x00" + "," + "[]" + "," + str(msg)
-        print(fileoutput,  file=open('auxbuslog.csv', 'a'))
+        lengthH = value
+      if (byte == 5):
+        lengthL = value
+        length = lengthH*256+lengthL 
+      if (byte == len(msg)/2):
+        checksum = value
+        sum=65536-sum
+        sum=sum&255
+        if checksum == sum:
+          checksumok = 1
+    if checksumok:
+    	output = str(round(time.time()-starttime,6)) + " - " + "Starsense Data: " + str(length) + " Bytes - Data: " + msg[5*2:-2]
+    	print (output)
+    	if filecsvoutput:
+        	fileoutput = str(round(time.time()-starttime,6)) + "," + "Starsense Camera" + "," + "0xb4" + ","  + "All" + "," + "0x00" + ","  + "Data" + "," + "0x00" + "," + "[]" + "," + str(msg)
+        	print(fileoutput,  file=open('auxbuslog.csv', 'a'))
+    else:
+    	print ("Starsense Data: CRC FAIL!")
 
 
 def processmsgqueue():
@@ -326,7 +338,7 @@ def sendmsg(sender,receiver,command,value):
   return hexoutput
 
 def sendmsg3c():
-  output = "3c000001b8908d6a4218df9a42c3796942e34a2c44151c6a42c7a76943e6f5694283da844376ff6942ffbf39443e556a4216505c441d4c6a4286ba2744487d6a42df4c6c4425836a42047ad44370306a4262d5f6433b020297784300404e446eba694291a9364435396a42dab89e43dcd36942eba0534491496a42c2e2024400006a42379c08447e8b6a42b10bcf4363f0694213dd1a44cc7f6a42f7771f44338069420a48164420ce6942ce5a0d44f2996942b2dda5422c1a6942e1087143d3e56a4259f90b44a6cb6942ff3f64444e2469429d6da84313496942f62d4d434e2469429d6dc44327926a4268fb4344b1db6a4232892044d8236a42cff641439d486a4200801d44b1db6a4232093f44312f6942d697ba4340386a429e7d1444498889449110204400e08944edec7843f2f66a4277f66944d9756a420000e042ee396b422dbb37439847694293c20644039a69422885cb43ce7069420080a44393827644fe3299425555694200404044abaa6a42fffff342efa6784398e9bf428bc86a4200000f4400000743008092434aba6a42db059743b5456942247ac7434aba6a4224fa89434997764401c03e44b54569424a57dd4387646942da426744d8"
+  output = "3c000001c85eda6942894f6b4406ea6942ebc25144d9f66942dbe241449d7d6a42b06bca43d95b6942c914a743b94a6c4252ed38433d9d694289d4204400006a4201203744f7c56942f4a8ba4212f16942ce74134359b56942e1adea42ef0e6a4299571b443ee169427734ed43485c6a423c9a3e44922f6a4288b34743477f6a42d77d474201006a4200201644ff7f784300203344b21a6b420000e14343946a4298f75a4443946a426788004416ed68422bc26144d60f6942a8bb274456556942b0486544ffbf764441f94f4444a96942be4666445fdc6a4251892c44bfb869420080b043a123694252c90a445fdc6a42528953440bf86a4254f60144a52e6942fce21e43b6a26942a0b2634256556942ac89844379c56a42f3f5be43a8937644cbd74843cfa4764406059143883a6942ccd7dd42883a694207c5074479c56a42fafa3244449d6a42fafa9a43ea646a423b05bb4362476942760a41439eb86a42b453e041c48e6a420000b34317649a44c91a1a445555784300002943abaa6a4200004b444dd66a422f08124466ad764417f55b43087f6a42ba0264440dc96a420000d3437a9b6a42d9821e440dc96a420000b54387646942da42674487646942dac246440000000000000000b0"
   decodemsg3c(output)
   hexoutput = binascii.unhexlify(output)
   return hexoutput
