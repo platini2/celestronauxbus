@@ -5,7 +5,7 @@ __author__ = "Patricio Latini"
 __copyright__ = "Copyright 2020, Patricio Latini"
 __credits__ = "Patricio Latini"
 __license__ = "GPLv3"
-__version__ = "0.7.4"
+__version__ = "0.8.1"
 __maintainer__ = "Patricio Latini"
 __email__ = "p_latini@hotmail.com"
 __status__ = "Production"
@@ -32,6 +32,8 @@ global verbose
 verbose = False
 global filecsvoutput
 filecsvoutput = False
+global oof
+oof = 0
 
 scannerid = 0x22
 preamble = 0x3b
@@ -295,9 +297,12 @@ def decodemsg3c (msg):
 
 def processmsgqueue():
   global msgqueue
+  global oof
   if len(msgqueue)>1:
     while len(msgqueue)>1 and msgqueue[0:2] != str(hex(preamble))[2:] and msgqueue[0:2] != str(hex(preamble2))[2:]:
-      msgqueue=msgqueue[1:]
+      #oofd = oofd + msgqueue[0:2]
+      oof = oof+1
+      msgqueue=msgqueue[2:]
   emptyqueue=0
   while len(msgqueue)>=(2*6) and (msgqueue[0:2] == str(hex(preamble))[2:] or msgqueue[0:2] == str(hex(preamble2))[2:]) and emptyqueue==0:
     if msgqueue[0:2] == str(hex(preamble))[2:]:
@@ -413,7 +418,8 @@ def printhelpmenu():
   print ("v) toggle Verbose output")
   print ("f) toggle csv File output")
   print ("g) toggle GPS simulator")
-  print ("r) Reset Packet Timer  ")  
+  print ("r) Reset Packet Timer  ")
+  print ("o) Out of frame counter") 
   print ("h) print this Help menu")
   print ("q) Quit                ")
   print ("-----------------------")
@@ -548,6 +554,7 @@ def execute_code(connmodearg, port):
   global endthread
   global verbose
   global filecsvoutput
+  global oof
 
   connmode = connmodearg
 
@@ -634,6 +641,8 @@ def execute_code(connmodearg, port):
         starttime=time.time()
     if inputkey == "h":
         printhelpmenu()
+    if inputkey == "o":
+        print("Out of Frame bytes : ", oof)
     if inputkey == "3":
         transmitmsg('3c','','','','')
     if inputkey == "q":
