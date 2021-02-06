@@ -232,29 +232,29 @@ def decodemsg (msg):
         global gpslat,gpslon    
         if str(hex(receiver)) == '0xb0':
           if str(hex(command)) == '0x36':
-            transmitmsg(receiver,sender,command,'01')
+            transmitmsg('3b',receiver,sender,command,'01')
           if str(hex(command)) == '0xfe':
-            transmitmsg(receiver,sender,command,'0b01')
+            transmitmsg('3b',receiver,sender,command,'0b01')
           if str(hex(command)) == '0x33':
-            transmitmsg(receiver,sender,command,format(datetime.now(timezone.utc).hour, '02x')+format(datetime.now(timezone.utc).minute, '02x')+format(datetime.now(timezone.utc).second, '02x'))
+            transmitmsg('3b',receiver,sender,command,format(datetime.now(timezone.utc).hour, '02x')+format(datetime.now(timezone.utc).minute, '02x')+format(datetime.now(timezone.utc).second, '02x'))
           if str(hex(command)) == '0x3':
-            transmitmsg(receiver,sender,command,format(datetime.now(timezone.utc).month, '02x')+format(datetime.now(timezone.utc).day, '02x'))
+            transmitmsg('3b',receiver,sender,command,format(datetime.now(timezone.utc).month, '02x')+format(datetime.now(timezone.utc).day, '02x'))
           if str(hex(command)) == '0x4':
-            transmitmsg(receiver,sender,command,format(datetime.now(timezone.utc).year, '04x'))
+            transmitmsg('3b',receiver,sender,command,format(datetime.now(timezone.utc).year, '04x'))
           if str(hex(command)) == '0x37':
-            transmitmsg(receiver,sender,command,'01')
+            transmitmsg('3b',receiver,sender,command,'01')
           if str(hex(command)) == '0x2':
             if gpslon>=0:
                 gpslonhex=format(int(gpslon/360*pow(2,24)),'06x')
             else: 
                 gpslonhex=format(int((gpslon+360)/360*pow(2,24)),'06x')
-            transmitmsg(receiver,sender,command,gpslonhex)
+            transmitmsg('3b',receiver,sender,command,gpslonhex)
           if str(hex(command)) == '0x1':
             if gpslat>=0:
                 gpslathex=format(int(gpslat/360*pow(2,24)),'06x')
             else: 
                 gpslathex=format(int((gpslat+360)/360*pow(2,24)),'06x')
-            transmitmsg(receiver,sender,command,gpslathex)
+            transmitmsg('3b',receiver,sender,command,gpslathex)
     else:
       print (hex(sender)," -> ", hex(receiver), "---", hex(command), "---", commandvalue, "CRC FAIL!")
 
@@ -280,9 +280,13 @@ def decodemsg3c (msg):
         if checksum == sum:
           checksumok = 1
     if checksumok:
-    	output = str(round(time.time()-starttime,6)) + " - " + "Starsense Data: " + str(length) + " Bytes - Data: " + msg[5*2:-2]
-    	print (output)
-    	if filecsvoutput:
+        if verbose:
+          dumptext = ' --- ' + str(msg)
+        else:
+          dumptext = ''
+        output = str(round(time.time()-starttime,6)) + " - " + "Starsense Data: " + str(length) + " Bytes - Data: " + msg[5*2:-2] + dumptext
+        print (output)
+        if filecsvoutput:
         	fileoutput = str(round(time.time()-starttime,6)) + "," + "Starsense Camera" + "," + "0xb4" + ","  + "All" + "," + "0x00" + ","  + "Data" + "," + "0x00" + "," + "[]" + "," + str(msg)
         	print(fileoutput,  file=open('auxbuslog.csv', 'a'))
     else:
@@ -311,7 +315,7 @@ def processmsgqueue():
         else:
           emptyqueue=1
         
-def sendmsg(sender,receiver,command,value):
+def encodemsg(sender,receiver,command,value):
   global preamble
   commandvalue=[]
   byte=0
@@ -337,11 +341,23 @@ def sendmsg(sender,receiver,command,value):
   hexoutput = binascii.unhexlify(output)
   return hexoutput
 
-def sendmsg3c():
-  output = "3c000001c85eda6942894f6b4406ea6942ebc25144d9f66942dbe241449d7d6a42b06bca43d95b6942c914a743b94a6c4252ed38433d9d694289d4204400006a4201203744f7c56942f4a8ba4212f16942ce74134359b56942e1adea42ef0e6a4299571b443ee169427734ed43485c6a423c9a3e44922f6a4288b34743477f6a42d77d474201006a4200201644ff7f784300203344b21a6b420000e14343946a4298f75a4443946a426788004416ed68422bc26144d60f6942a8bb274456556942b0486544ffbf764441f94f4444a96942be4666445fdc6a4251892c44bfb869420080b043a123694252c90a445fdc6a42528953440bf86a4254f60144a52e6942fce21e43b6a26942a0b2634256556942ac89844379c56a42f3f5be43a8937644cbd74843cfa4764406059143883a6942ccd7dd42883a694207c5074479c56a42fafa3244449d6a42fafa9a43ea646a423b05bb4362476942760a41439eb86a42b453e041c48e6a420000b34317649a44c91a1a445555784300002943abaa6a4200004b444dd66a422f08124466ad764417f55b43087f6a42ba0264440dc96a420000d3437a9b6a42d9821e440dc96a420000b54387646942da42674487646942dac246440000000000000000b0"
+def encodemsg3c():
+  global preamble2
+  data = "5eda6942894f6b4406ea6942ebc25144d9f66942dbe241449d7d6a42b06bca43d95b6942c914a743b94a6c4252ed38433d9d694289d4204400006a4201203744f7c56942f4a8ba4212f16942ce74134359b56942e1adea42ef0e6a4299571b443ee169427734ed43485c6a423c9a3e44922f6a4288b34743477f6a42d77d474201006a4200201644ff7f784300203344b21a6b420000e14343946a4298f75a4443946a426788004416ed68422bc26144d60f6942a8bb274456556942b0486544ffbf764441f94f4444a96942be4666445fdc6a4251892c44bfb869420080b043a123694252c90a445fdc6a42528953440bf86a4254f60144a52e6942fce21e43b6a26942a0b2634256556942ac89844379c56a42f3f5be43a8937644cbd74843cfa4764406059143883a6942ccd7dd42883a694207c5074479c56a42fafa3244449d6a42fafa9a43ea646a423b05bb4362476942760a41439eb86a42b453e041c48e6a420000b34317649a44c91a1a445555784300002943abaa6a4200004b444dd66a422f08124466ad764417f55b43087f6a42ba0264440dc96a420000d3437a9b6a42d9821e440dc96a420000b54387646942da42674487646942dac246440000000000000000"
+  length = "{:08x}".format(int(len(data)/2))
+  data = length + data
+  valuesum = sum(int(data[c:c+2],16) for c in range(0,len(data),2)) 
+  summa = 0 + valuesum
+  summa=65536-summa
+  summa=summa&255
+  output1 = "{:02x}".format(preamble2)
+  output2 = data
+  output3 = "{:02x}".format(summa)
+  output = output1 + output2 + output3
   decodemsg3c(output)
   hexoutput = binascii.unhexlify(output)
   return hexoutput
+
 
 def scanauxbus(target):
   global keepalive
@@ -350,10 +366,10 @@ def scanauxbus(target):
   print ("-----------------------")
   if target=='known':
     for device in devices:
-      transmitmsg('',device,0xfe,'')
+      transmitmsg('3b','',device,0xfe,'')
   if target=='all':
     for device in range(0x01,0xff):
-      transmitmsg('',device,0xfe,'')
+      transmitmsg('3b','',device,0xfe,'')
   identifymount()
   time.sleep(1.5)  
   print ("-----------------------")
@@ -366,7 +382,7 @@ def scanauxbus(target):
 def identifymount():
   device = 0x10
   if str(hex(device)) in activedevices:
-    transmitmsg('',device,0x05,'')
+    transmitmsg('3b','',device,0x05,'')
 
 def printactivedevices():
   if mount in mounts:
@@ -403,8 +419,11 @@ def printhelpmenu():
   print ("-----------------------")
 
 
-def transmitmsg(sender,receiver,command,value):
-    data = sendmsg(sender,receiver,command,value)
+def transmitmsg(msgtype,sender,receiver,command,value):
+    if msgtype=='3b':
+        data = encodemsg(sender,receiver,command,value)
+    if msgtype=='3c':
+        data = encodemsg3c()  
     if connmode == 'wifi':
         sock.send(data)
     if connmode == 'serial':
@@ -425,7 +444,7 @@ def keep_alive(interval):
     global endthread
     while not endthread:
         if keepalive:
-            transmitmsg('',0x10,0xfe,'')
+            transmitmsg('3b','',0x10,0xfe,'')
         time.sleep(interval)
     print ("Finished Keep Alive")
 
@@ -569,7 +588,7 @@ def execute_code(connmodearg, port):
         print ("-----------------------")
         print ("Choose command")
         key2 = input("Enter Command:")
-        transmitmsg('',int(listactivedevices[int(key1)],16),filtercommands[ord(key2)-97][0],'')
+        transmitmsg('3b','',int(listactivedevices[int(key1)],16),filtercommands[ord(key2)-97][0],'')
 
     if inputkey == "k":
         print ("-----------------------")
@@ -615,9 +634,11 @@ def execute_code(connmodearg, port):
         starttime=time.time()
     if inputkey == "h":
         printhelpmenu()
+    if inputkey == "3":
+        transmitmsg('3c','','','','')
     if inputkey == "q":
         endthread = True
-        transmitmsg('',0x10,0xfe,'')
+        transmitmsg('3b','',0x10,0xfe,'')
         t0.join()
         t2.join()
         closeconn()
