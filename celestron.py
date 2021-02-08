@@ -5,7 +5,7 @@ __author__ = "Patricio Latini"
 __copyright__ = "Copyright 2020, Patricio Latini"
 __credits__ = "Patricio Latini"
 __license__ = "GPLv3"
-__version__ = "0.8.2"
+__version__ = "0.8.5"
 __maintainer__ = "Patricio Latini"
 __email__ = "p_latini@hotmail.com"
 __status__ = "Production"
@@ -32,6 +32,8 @@ global verbose
 verbose = False
 global filecsvoutput
 filecsvoutput = False
+global rawfileoutput
+rawfileoutput = False
 global oof
 oof = 0
 
@@ -323,6 +325,7 @@ def processmsgqueue():
         
 def encodemsg(sender,receiver,command,value):
   global preamble
+  global msgqueue
   commandvalue=[]
   byte=0
   if sender=='':
@@ -343,7 +346,9 @@ def encodemsg(sender,receiver,command,value):
   output2 = value
   output3 = "{:02x}".format(summa)
   output = output1 + output2 + output3
-  decodemsg(output)
+  msgqueue = msgqueue + output
+  processmsgqueue()
+#  decodemsg(output)
   hexoutput = binascii.unhexlify(output)
   return hexoutput
 
@@ -424,6 +429,8 @@ def printhelpmenu():
   print ("v) toggle Verbose output")
   print ("f) toggle csv File output")
   print ("g) toggle GPS simulator")
+  print ("8) Read raw capture from file rawinput.txt")
+  print ("9) Write raw capture to file rawoutput.txt")
   print ("r) Reset Packet Timer  ")
   print ("o) Out of frame counter") 
   print ("h) print this Help menu")
@@ -435,7 +442,10 @@ def transmitmsg(msgtype,sender,receiver,command,value):
     if msgtype=='3b':
         data = encodemsg(sender,receiver,command,value)
     if msgtype=='3c':
-        data = encodemsg3c()  
+        data = encodemsg3c()
+    if rawfileoutput:
+        fileoutput = str(binascii.hexlify(data),'utf-8')
+        print(fileoutput,  file=open('rawoutput.txt', 'a'))
     if connmode == 'wifi':
         sock.send(data)
     if connmode == 'serial':
@@ -463,6 +473,7 @@ def keep_alive(interval):
 def receivedata():
   global msgqueue
   global endthread
+  global rawfileoutput
   data=''
   while not endthread:
       if connmode=='wifi':
@@ -474,10 +485,23 @@ def receivedata():
       if len(data)>0:
           stringdata = binascii.hexlify(data)
           msgqueue = msgqueue + str(stringdata,'utf-8')
+          if rawfileoutput:
+              fileoutput = str(stringdata,'utf-8')
+              print(fileoutput,  file=open('rawoutput.txt', 'a'))
           processmsgqueue()
           data=''
   print ("Finished Receive Data")
 
+def fileplayback(filename):
+    global msgqueue
+    f = open(filename, "r")
+    f.seek(0)
+    file =''
+    for line in f.read().splitlines():
+      msgqueue = msgqueue + line
+      processmsgqueue()
+    f.close()
+    print ("Finished File Processing")
 
 def initializeconn():
     if connmode=='wifi':
@@ -560,6 +584,7 @@ def execute_code(connmodearg, port):
   global endthread
   global verbose
   global filecsvoutput
+  global rawfileoutput
   global oof
 
   connmode = connmodearg
@@ -642,7 +667,7 @@ def execute_code(connmodearg, port):
         filecsvoutput = not filecsvoutput
         if filecsvoutput:
             fileoutput = 'timestamp,'+'sender,'+'sender_id,'+'receiver,'+'receiver_id,'+'command,'+'command_id,'+'command_data,'+'raw_packet'
-            print(fileoutput,  file=open('auxbuslog.csv', 'w'))
+            print(fileoutput, file=open('auxbuslog.csv','w'))
     if inputkey == "r":
         starttime=time.time()
     if inputkey == "h":
@@ -651,6 +676,12 @@ def execute_code(connmodearg, port):
         print("Out of Frame bytes : ", oof)
     if inputkey == "3":
         transmitmsg('3c','','','','')
+    if inputkey == "8":
+        fileplayback("rawinput.txt")
+    if inputkey == "9":
+        rawfileoutput = not rawfileoutput
+        if rawfileoutput:
+          open('rawoutput.txt','w')
     if inputkey == "q":
         endthread = True
         transmitmsg('3b','',0x10,0xfe,'')
