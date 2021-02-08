@@ -347,7 +347,7 @@ def encodemsg(sender,receiver,command,value):
   output2 = value
   output3 = "{:02x}".format(summa)
   output = output1 + output2 + output3
-  if connmode == "hc":
+  if connmode == "hc" or connmode == "wifi" :
     msgqueue = msgqueue + output
     processmsgqueue()
 #  decodemsg(output)
