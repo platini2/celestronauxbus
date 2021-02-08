@@ -5,7 +5,7 @@ __author__ = "Patricio Latini"
 __copyright__ = "Copyright 2020, Patricio Latini"
 __credits__ = "Patricio Latini"
 __license__ = "GPLv3"
-__version__ = "0.8.5"
+__version__ = "0.8.6"
 __maintainer__ = "Patricio Latini"
 __email__ = "p_latini@hotmail.com"
 __status__ = "Production"
@@ -444,7 +444,7 @@ def transmitmsg(msgtype,sender,receiver,command,value):
     if msgtype=='3c':
         data = encodemsg3c()
     if rawfileoutput:
-        fileoutput = str(binascii.hexlify(data),'utf-8')
+        fileoutput = str(round(time.time()-starttime,6)) + " " + str(binascii.hexlify(data),'utf-8')
         print(fileoutput,  file=open('rawoutput.txt', 'a'))
     if connmode == 'wifi':
         sock.send(data)
@@ -486,7 +486,7 @@ def receivedata():
           stringdata = binascii.hexlify(data)
           msgqueue = msgqueue + str(stringdata,'utf-8')
           if rawfileoutput:
-              fileoutput = str(stringdata,'utf-8')
+              fileoutput = str(round(time.time()-starttime,6)) + " " + str(stringdata,'utf-8')
               print(fileoutput,  file=open('rawoutput.txt', 'a'))
           processmsgqueue()
           data=''
@@ -498,7 +498,12 @@ def fileplayback(filename):
     f.seek(0)
     file =''
     for line in f.read().splitlines():
-      msgqueue = msgqueue + line
+      line2=line.split()
+      if len(line2) == 2:
+         data = line2[1]
+      else:
+         data = line2[0]
+      msgqueue = msgqueue + data
       processmsgqueue()
     f.close()
     print ("Finished File Processing")
