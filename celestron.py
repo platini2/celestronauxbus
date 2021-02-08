@@ -5,7 +5,7 @@ __author__ = "Patricio Latini"
 __copyright__ = "Copyright 2020, Patricio Latini"
 __credits__ = "Patricio Latini"
 __license__ = "GPLv3"
-__version__ = "0.8.6"
+__version__ = "0.8.7"
 __maintainer__ = "Patricio Latini"
 __email__ = "p_latini@hotmail.com"
 __status__ = "Production"
@@ -18,6 +18,7 @@ import binascii
 import serial
 import keyboard
 import argparse
+import os
 from datetime import datetime,timezone
 
 global endthread
@@ -346,8 +347,9 @@ def encodemsg(sender,receiver,command,value):
   output2 = value
   output3 = "{:02x}".format(summa)
   output = output1 + output2 + output3
-  msgqueue = msgqueue + output
-  processmsgqueue()
+  if connmode == "hc":
+    msgqueue = msgqueue + output
+    processmsgqueue()
 #  decodemsg(output)
   hexoutput = binascii.unhexlify(output)
   return hexoutput
@@ -368,8 +370,9 @@ def encodemsg3c():
   output3 = "{:02x}".format(summa)
   output = output1 + output2 + output3
   output = "3c00000320908086434f114844b3707144fb581c44b3e02a4472103644c014fe43b3b4c443372e934458245044232e5143fed1f04377709b445b440e4419355944d59ebb4274dbf6415fb65a443eff2e439b9d5d44a8a57244433f384458fb3944f5085b4444cb3f4306152e4466ca8a440c844d44928939449a141b4451a1e943afa54842ad8f2f440cbc2d4458e98f4492de4f43bd318c44f017e242913f3343eebf5444538883442cbb0b443581594376c34f44ce359944a1816b430e2ff843bf26b743b31c1c43f164c043f96c1644a155b343b5fb2e44d0756c44894b79441b956b44203a3d44e0744d4404d8744467ed5243c1b24444e745bf43e2d17344ee63e243c88ba6438d432f44959be643ab3c3344f1fabc436a03e7430e148344fd245f44e8698344e74c05433ecb93444941b9437f6a8d4469d6c942e6ae6e444f32d943b66d1a44e9600144575a4c449b591f431d41a0432a0cfb436ced664356ddc941a1f25e447fec674343d6d44285ea9e43cfa69044e72536448de978449c424f44071193447b408a42a9000044166f63443188dd43672d48433b020250c24324ccc543d5140c44c75d324308de51444fe63c449809a44327415f4498078143d7e58043057a6b44fb018543c0ed064471fb8a431a6c1e447b8d2c43cc6b6d4463c7bc43b3113144535a6c44b7094b4419432144e2a410441ada25444a76e343a4b46644e74d7144a3de2e44d808974446521e44f0545344d0c39a42c7d05a4453143644389690429188db4398a38d438da25d44b7d4d442f8b4e643ad787a425d1aa7436c072e443c9e4944ecdc7b43d32827447b21e84223633a442efab2439d159443a4e865446d70bb438d073144d8856444456f6a42bcfaa54342a71644a5ca4a438f6f6c43d501d1432ca47544d6f46c440987ca4201c0024446a2c443ebd78a43552a4d44a9983a44f03ee3431c591744d6a2b2437a38c94371938d43054d404476241d446cda3944d1964f445ed2414369f604449c446a449998664340012c443f346a42aa329a428f6e6a42314a3f44978246445aaf3244b302e2430040334454132944d2911b44dc6a7d4344a2314401006a42306629440000000000000000f5"
-  msgqueue = msgqueue + output
-  processmsgqueue()
+  if connmode == "hc":
+    msgqueue = msgqueue + output
+    processmsgqueue()
 # decodemsg3c(output)
   hexoutput = binascii.unhexlify(output)
   return hexoutput
@@ -416,6 +419,10 @@ def printactivedevices():
     output = str(listactivedevices.index(device))+ ") " + devices[int(device,16)] + " (" + str(device) + ") - " + activedevices[device]
     print (output)
   
+
+def resettime():
+    global starttime
+    starttime=time.time()
 
 def printhelpmenu():
   print ("-----------------------")
@@ -494,12 +501,18 @@ def receivedata():
 
 def fileplayback(filename):
     global msgqueue
+    resettime()
     f = open(filename, "r")
     f.seek(0)
     file =''
+    linenum=0
     for line in f.read().splitlines():
+      linenum=linenum+1
       line2=line.split()
-      if len(line2) == 2:
+      if len(line2) == 2: 
+         if linenum != 1:
+            time.sleep(float(line2[0])-lasttime)
+         lasttime = float(line2[0])
          data = line2[1]
       else:
          data = line2[0]
@@ -674,7 +687,7 @@ def execute_code(connmodearg, port):
             fileoutput = 'timestamp,'+'sender,'+'sender_id,'+'receiver,'+'receiver_id,'+'command,'+'command_id,'+'command_data,'+'raw_packet'
             print(fileoutput, file=open('auxbuslog.csv','w'))
     if inputkey == "r":
-        starttime=time.time()
+        resettime()
     if inputkey == "h":
         printhelpmenu()
     if inputkey == "o":
@@ -682,7 +695,10 @@ def execute_code(connmodearg, port):
     if inputkey == "3":
         transmitmsg('3c','','','','')
     if inputkey == "8":
-        fileplayback("rawinput.txt")
+        if os.path.isfile("rawinput.txt"):
+          fileplayback("rawinput.txt")
+        else:
+          print ("rawinput.txt is not present")
     if inputkey == "9":
         rawfileoutput = not rawfileoutput
         if rawfileoutput:
