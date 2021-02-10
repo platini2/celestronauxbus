@@ -5,7 +5,7 @@ __author__ = "Patricio Latini"
 __copyright__ = "Copyright 2020, Patricio Latini"
 __credits__ = "Patricio Latini"
 __license__ = "GPLv3"
-__version__ = "0.8.7"
+__version__ = "0.8.8"
 __maintainer__ = "Patricio Latini"
 __email__ = "p_latini@hotmail.com"
 __status__ = "Production"
@@ -419,7 +419,6 @@ def printactivedevices():
     output = str(listactivedevices.index(device))+ ") " + devices[int(device,16)] + " (" + str(device) + ") - " + activedevices[device]
     print (output)
   
-
 def resettime():
     global starttime
     starttime=time.time()
@@ -444,6 +443,14 @@ def printhelpmenu():
   print ("q) Quit                ")
   print ("-----------------------")
 
+def tosigned24(hexnum):
+    n = int(hexnum,16)
+    n = n & 0xffffff
+    return n | (-(n & 0x800000))
+
+def hextoposition(hexnum):
+    position = tosigned24(hexnum)/pow(2,24)*360
+    return position
 
 def transmitmsg(msgtype,sender,receiver,command,value):
     if msgtype=='3b':
@@ -452,7 +459,7 @@ def transmitmsg(msgtype,sender,receiver,command,value):
         data = encodemsg3c()
     if rawfileoutput:
         fileoutput = str(round(time.time()-starttime,6)) + " " + str(binascii.hexlify(data),'utf-8')
-        print(fileoutput,  file=open('rawoutput.txt', 'a'))
+        print(fileoutput, file=open('rawoutput.txt', 'a'))
     if connmode == 'wifi':
         sock.send(data)
     if connmode == 'serial':
@@ -483,12 +490,12 @@ def receivedata():
   global rawfileoutput
   data=''
   while not endthread:
+      time.sleep(.05)
       if connmode=='wifi':
         data = sock.recv(BUFFER_SIZE)
       if connmode=='serial' or connmode=='hc':
         if (ser.inWaiting()>0):
             data = ser.read(ser.inWaiting())
-            time.sleep(.05)
       if len(data)>0:
           stringdata = binascii.hexlify(data)
           msgqueue = msgqueue + str(stringdata,'utf-8')
@@ -520,6 +527,9 @@ def fileplayback(filename):
       processmsgqueue()
     f.close()
     print ("Finished File Processing")
+
+
+
 
 def initializeconn():
     if connmode=='wifi':
@@ -611,7 +621,6 @@ def execute_code(connmodearg, port):
     SERVER_IP = port
   if connmode=='serial' or connmode=='hc':
     COM_PORT = port
-
   print ("-------------------------------")
   print (" AUXBUS SCANNER VERSION",__version__)
   print ("-------------------------------") 
