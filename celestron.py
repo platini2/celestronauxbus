@@ -5,7 +5,7 @@ __author__ = "Patricio Latini"
 __copyright__ = "Copyright 2020, Patricio Latini"
 __credits__ = "Patricio Latini"
 __license__ = "GPLv3"
-__version__ = "0.8.9"
+__version__ = "0.8.10"
 __maintainer__ = "Patricio Latini"
 __email__ = "p_latini@hotmail.com"
 __status__ = "Production"
@@ -47,6 +47,7 @@ mounts = {
             0x0001 : 'Nexstar GPS',
             0x0783 : 'Nexstar SLT',
             0x1189 : 'CPC Deluxe',
+            0x1485 : 'AVX',
             0x1687 : 'Nexstar Evolution 8',
             0x1788 : 'CGX'}
 
