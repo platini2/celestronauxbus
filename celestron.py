@@ -5,7 +5,7 @@ __author__ = "Patricio Latini"
 __copyright__ = "Copyright 2020, Patricio Latini"
 __credits__ = "Patricio Latini"
 __license__ = "GPLv3"
-__version__ = "0.8.10"
+__version__ = "0.8.11"
 __maintainer__ = "Patricio Latini"
 __email__ = "p_latini@hotmail.com"
 __status__ = "Production"
@@ -231,10 +231,10 @@ def decodemsg(msg):
           dumptext = ' --- ' + str(msg)
       else:
           dumptext = ''
-      output = str(round(time.time()-starttime,6)) + " - " + sendertext + " (" + str(hex(sender)) + ") " + "-> " + receivertext + " (" + str(hex(receiver)) + ") " + "--- " + commandtext + " (" + str(hex(command)) + ") " + "--- " + str(commandvalue) + dumptext
+      output = str(format(round(time.time()-starttime,6),'14.6f')) + " - " + sendertext + " (" + str(hex(sender)) + ") " + "-> " + receivertext + " (" + str(hex(receiver)) + ") " + "--- " + commandtext + " (" + str(hex(command)) + ") " + "--- " + str(commandvalue) + dumptext
       print (output)
       if filecsvoutput:
-          fileoutput = str(round(time.time()-starttime,6)) + "," + sendertext + "," + str(hex(sender)) + ","  + receivertext + "," + str(hex(receiver)) + ","  + commandtext + "," + str(hex(command)) + "," + str(commandvalue) + "," + str(msg)
+          fileoutput = str(format(round(time.time()-starttime,6),'14.6f')) + "," + sendertext + "," + str(hex(sender)) + ","  + receivertext + "," + str(hex(receiver)) + ","  + commandtext + "," + str(hex(command)) + "," + str(commandvalue) + "," + str(msg)
           print(fileoutput,  file=open('auxbuslog.csv', 'a'))
       if emulategps:
         global gpslat,gpslon    
@@ -292,10 +292,10 @@ def decodemsg3c(msg):
           dumptext = ' --- ' + str(msg)
         else:
           dumptext = ''
-        output = str(round(time.time()-starttime,6)) + " - " + "Starsense Data: " + str(length) + " Bytes - Data: " + msg[5*2:-2] + dumptext
+        output = str(format(round(time.time()-starttime,6),'14.6f')) + " - " + "Starsense Data: " + str(length) + " Bytes - Data: " + msg[5*2:-2] + dumptext
         print (output)
         if filecsvoutput:
-        	fileoutput = str(round(time.time()-starttime,6)) + "," + "Starsense Camera" + "," + "0xb4" + ","  + "All" + "," + "0x00" + ","  + "Data" + "," + "0x00" + "," + "[]" + "," + str(msg)
+        	fileoutput = str(format(round(time.time()-starttime,6),'14.6f')) + "," + "Starsense Camera" + "," + "0xb4" + ","  + "All" + "," + "0x00" + ","  + "Data" + "," + "0x00" + "," + "[]" + "," + str(msg)
         	print(fileoutput,  file=open('auxbuslog.csv', 'a'))
     else:
     	print ("Starsense Data: CRC FAIL!")
