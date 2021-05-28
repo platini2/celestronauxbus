@@ -5,7 +5,7 @@ __author__ = "Patricio Latini"
 __copyright__ = "Copyright 2020, Patricio Latini"
 __credits__ = "Patricio Latini"
 __license__ = "GPLv3"
-__version__ = "0.8.12"
+__version__ = "0.9.0"
 __maintainer__ = "Patricio Latini"
 __email__ = "p_latini@hotmail.com"
 __status__ = "Production"
@@ -47,6 +47,7 @@ mounts = {
             0x0001 : 'Nexstar GPS',
             0x0783 : 'Nexstar SLT',
             0x1189 : 'CPC Deluxe',
+            0x1283 : 'GT Series',
             0x1485 : 'AVX',
             0x1687 : 'Nexstar Evolution 8',
             0x1788 : 'CGX'}
@@ -164,6 +165,9 @@ SERVER_PORT = 2000
 BUFFER_SIZE = 100
 KEEP_ALIVE_INTERVAL = 10
 
+def xprint(*args):
+    print(" ".join(map(str,args)))
+
 def decodemsg(msg):
     global mount
     byte=0
@@ -232,7 +236,7 @@ def decodemsg(msg):
       else:
           dumptext = ''
       output = str(format(round(time.time()-starttime,6),'14.6f')) + " - " + sendertext + " (0x" + str(format(sender,'02x')) + ") " + "-> " + receivertext + " (0x" + str(format(receiver,'02x')) + ") " + "--- " + commandtext + " (0x" + str(format(command,'02x')) + ") " + "--- " + str(commandvalue) + dumptext
-      print (output)
+      xprint (output)
       if filecsvoutput:
           fileoutput = str(format(round(time.time()-starttime,6),'14.6f')) + "," + sendertext + "," + str(hex(sender)) + ","  + receivertext + "," + str(hex(receiver)) + ","  + commandtext + "," + str(hex(command)) + "," + str(commandvalue) + "," + str(msg)
           print(fileoutput,  file=open('auxbuslog.csv', 'a'))
@@ -264,7 +268,8 @@ def decodemsg(msg):
                 gpslathex=format(int((gpslat+360)/360*pow(2,24)),'06x')
             transmitmsg('3b',receiver,sender,command,gpslathex)
     else:
-      print (hex(sender)," -> ", hex(receiver), "---", hex(command), "---", commandvalue, "CRC FAIL!")
+      output = str(hex(sender)+ " -> " + hex(receiver) + " --- " + hex(command) + " --- " + ' '.join(map(str, commandvalue)) + " CRC FAIL!")
+      xprint (output)
 
 def decodemsg3c(msg):
     byte=0
@@ -293,12 +298,12 @@ def decodemsg3c(msg):
         else:
           dumptext = ''
         output = str(format(round(time.time()-starttime,6),'14.6f')) + " - " + "Starsense Data: " + str(length) + " Bytes - Data: " + msg[5*2:-2] + dumptext
-        print (output)
+        xprint (output)
         if filecsvoutput:
         	fileoutput = str(format(round(time.time()-starttime,6),'14.6f')) + "," + "Starsense Camera" + "," + "0xb4" + ","  + "All" + "," + "0x00" + ","  + "Data" + "," + "0x00" + "," + "[]" + "," + str(msg)
         	print(fileoutput,  file=open('auxbuslog.csv', 'a'))
     else:
-    	print ("Starsense Data: CRC FAIL!")
+    	xprint ("Starsense Data: CRC FAIL!")
 
 
 def processmsgqueue():
@@ -330,6 +335,7 @@ def processmsgqueue():
 def encodemsg(sender,receiver,command,value):
   global preamble
   global msgqueue
+  global connmode
   commandvalue=[]
   byte=0
   if sender=='':
@@ -383,10 +389,10 @@ def encodemsg3c():
 
 def scanauxbus(target):
   global keepalive
-  print ("-----------------------")
-  print ("Initiating AUXBUS SCAN ")
-  print ("-----------------------")
-  print ("     Timestamp - Sender                  Hex   -> Receiver                Hex   --- Command      Hex   --- Value")
+  xprint ("-----------------------")
+  xprint ("Initiating AUXBUS SCAN ")
+  xprint ("-----------------------")
+  xprint ("     Timestamp - Sender                  Hex   -> Receiver                Hex   --- Command      Hex   --- Value")
   if target=='known':
     for device in devices:
       transmitmsg('3b','',device,0xfe,'')
@@ -395,9 +401,9 @@ def scanauxbus(target):
       transmitmsg('3b','',device,0xfe,'')
   identifymount()
   time.sleep(1.5)  
-  print ("-----------------------")
-  print (" Finished AUXBUS SCAN  ")
-  print ("-----------------------")
+  xprint ("-----------------------")
+  xprint (" Finished AUXBUS SCAN  ")
+  xprint ("-----------------------")
   printactivedevices()
   if connmode=="wifi":
     keepalive=True
@@ -412,16 +418,16 @@ def printactivedevices():
     mounttext = mounts[mount]
   else: 
     mounttext = 'UNKNOWN' + " (" + str(hex(mount))+ ")" if len(mount)>0 else 'NOT DETECTED'  
-  print ("-----------------------")
-  print (" Mount :", mounttext )
-  print ("-----------------------")
-  print ("-----------------------")
-  print ("   Detected Devices    ")
-  print ("-----------------------")
+  xprint ("-----------------------")
+  xprint (" Mount :", mounttext )
+  xprint ("-----------------------")
+  xprint ("-----------------------")
+  xprint ("   Detected Devices    ")
+  xprint ("-----------------------")
   listactivedevices=list(activedevices)
   for device in activedevices:
     output = str(listactivedevices.index(device))+ ") " + devices[int(device,16)] + " (0x" + format(int(device,16),'02x') + ") - " + activedevices[device]
-    print (output)
+    xprint (output)
   
 def resettime():
     global starttime
@@ -486,7 +492,7 @@ def keep_alive(interval):
         if keepalive:
             transmitmsg('3b','',0x10,0xfe,'')
         time.sleep(interval)
-    print ("Finished Keep Alive")
+    xprint ("Finished Keep Alive")
 
 def receivedata():
   global msgqueue
@@ -508,7 +514,7 @@ def receivedata():
               print(fileoutput,  file=open('rawoutput.txt', 'a'))
           processmsgqueue()
           data=''
-  print ("Finished Receive Data")
+  xprint ("Finished Receive Data")
 
 def fileplayback(filename):
     global msgqueue
@@ -530,18 +536,18 @@ def fileplayback(filename):
       msgqueue = msgqueue + data
       processmsgqueue()
     f.close()
-    print ("Finished File Processing")
+    xprint ("Finished File Processing")
 
-
-
-
-def initializeconn():
+def initializeconn(connmodearg,port):
+    global connmode
+    connmode = connmodearg
     if connmode=='wifi':
+        SERVER_IP = port
         global sock
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.connect((SERVER_IP, SERVER_PORT))
-
-    if connmode=='serial' or connmode=='hc': 
+    if connmode=='serial' or connmode=='hc':
+        COM_PORT = port
         global ser
         ser = serial.Serial()
         ser.port = COM_PORT
@@ -580,10 +586,23 @@ def initializeconn():
             #Should return 0x05 0x00 0x06 0x38 0xc0
             data = ser.read(ser.inWaiting())
 
+def appstartup():
+  global starttime
+  xprint ("-------------------------------")
+  xprint (" AUXBUS SCANNER VERSION",__version__)
+  xprint ("-------------------------------") 
+  starttime=time.time()
+  launchthreads()
+  scanauxbus('known')
+  xprint ("-----------------------")
+  xprint ("Starting AUXBUS Monitor")
+  xprint ("-----------------------")
+  printhelpmenu()
+
 def closeconn():
-  print ("-----------------------")
-  print ("      Closing          ")
-  print ("-----------------------")
+  xprint ("-----------------------")
+  xprint ("      Closing          ")
+  xprint ("-----------------------")
   if connmode=='wifi': 
     sock.close()
   if connmode=='serial' or connmode=='hc':
@@ -603,11 +622,8 @@ def launchthreads():
     t2.daemon = True
     t2.start()
 
-
-def execute_code(connmodearg, port):
+def mainloop():
   global emulategps
-  global connmode
-  global SERVER_IP, COM_PORT
   global keepalive
   global gpslat,gpslon
   global activedevices
@@ -618,24 +634,6 @@ def execute_code(connmodearg, port):
   global filecsvoutput
   global rawfileoutput
   global oof
-
-  connmode = connmodearg
-
-  if connmode=='wifi': 
-    SERVER_IP = port
-  if connmode=='serial' or connmode=='hc':
-    COM_PORT = port
-  print ("-------------------------------")
-  print (" AUXBUS SCANNER VERSION",__version__)
-  print ("-------------------------------") 
-  initializeconn()
-  starttime=time.time()
-  launchthreads()
-  scanauxbus('known')
-  print ("-----------------------")
-  print ("Starting AUXBUS Monitor")
-  print ("-----------------------")
-  printhelpmenu()      
 
   while True:
     inputkey = input("Enter Command:")
@@ -730,11 +728,9 @@ def main():
     parser.add_argument('connmode', help='connection mode (wifi / serial / hc)')
     parser.add_argument('port', help='connection port (ip address / COM Port')
     args = parser.parse_args()
-    execute_code(args.connmode, args.port)
+    initializeconn(args.connmode, args.port)
+    appstartup()
+    mainloop()
 
 if __name__ == '__main__':
     main()
-
-
-
-
