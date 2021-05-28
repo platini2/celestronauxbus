@@ -5,7 +5,7 @@ __author__ = "Patricio Latini"
 __copyright__ = "Copyright 2020, Patricio Latini"
 __credits__ = "Patricio Latini"
 __license__ = "GPLv3"
-__version__ = "0.8.11"
+__version__ = "0.8.12"
 __maintainer__ = "Patricio Latini"
 __email__ = "p_latini@hotmail.com"
 __status__ = "Production"
@@ -52,29 +52,29 @@ mounts = {
             0x1788 : 'CGX'}
 
 devices = {
-            0x01 : 'Main Board',
-            0x04 : 'Nexstar HC',
-            0x0d : 'Nexstar+ HC',
-            0x0e : 'Starsense HC',
-            0x10 : 'AZM MC',
-            0x11 : 'ALT MC', 
-            0x12 : 'Focuser',
-            0x17 : '?????', 
-            0x20 : 'CPWI',
-            0x21 : 'CFM',
-            0x22 : 'AUXBUS Scanner',
-            0x30 : 'CGX RA Switch',
-            0x31 : 'CGX DEC Switch',
+            0x01 : 'Main Board            ',
+            0x04 : 'Nexstar HC            ',
+            0x0d : 'Nexstar+ HC           ',
+            0x0e : 'Starsense HC          ',
+            0x10 : 'AZM MC                ',
+            0x11 : 'ALT MC                ', 
+            0x12 : 'Focuser               ',
+            0x17 : '?????                 ', 
+            0x20 : 'CPWI                  ',
+            0x21 : 'CFM                   ',
+            0x22 : 'AUXBUS Scanner        ',
+            0x30 : 'CGX RA Switch         ',
+            0x31 : 'CGX DEC Switch        ',
             0x32 : 'CGX DEC Autoguide Port',
-            0xb0 : 'GPS',
-            0xb2 : 'RTC',
-            0xb3 : 'Skyportal Accessory',
-            0xb4 : 'Starsense Camera',
-            0xb5 : 'Nextstar EVO WiFi',
-            0xb6 : 'Battery Power Controller',
-            0xb7 : 'Charge Port',
-            0xb8 : 'Starsense Camera SkyW',
-            0xbf : 'Mount Lights'}
+            0xb0 : 'GPS                   ',
+            0xb2 : 'RTC                   ',
+            0xb3 : 'Skyportal Accessory   ',
+            0xb4 : 'Starsense Camera      ',
+            0xb5 : 'Nexstar EVO WiFi      ',
+            0xb6 : 'Battery Power Cont    ',
+            0xb7 : 'Charge Port           ',
+            0xb8 : 'Starsense Camera SkyW ',
+            0xbf : 'Mount Lights          '}
 
 controllers = [ 0x04 , 0x0d , 0x0e , 0x20, 0x21, 0x22 ]
 activedevices = {}
@@ -231,7 +231,7 @@ def decodemsg(msg):
           dumptext = ' --- ' + str(msg)
       else:
           dumptext = ''
-      output = str(format(round(time.time()-starttime,6),'14.6f')) + " - " + sendertext + " (" + str(hex(sender)) + ") " + "-> " + receivertext + " (" + str(hex(receiver)) + ") " + "--- " + commandtext + " (" + str(hex(command)) + ") " + "--- " + str(commandvalue) + dumptext
+      output = str(format(round(time.time()-starttime,6),'14.6f')) + " - " + sendertext + " (0x" + str(format(sender,'02x')) + ") " + "-> " + receivertext + " (0x" + str(format(receiver,'02x')) + ") " + "--- " + commandtext + " (0x" + str(format(command,'02x')) + ") " + "--- " + str(commandvalue) + dumptext
       print (output)
       if filecsvoutput:
           fileoutput = str(format(round(time.time()-starttime,6),'14.6f')) + "," + sendertext + "," + str(hex(sender)) + ","  + receivertext + "," + str(hex(receiver)) + ","  + commandtext + "," + str(hex(command)) + "," + str(commandvalue) + "," + str(msg)
@@ -386,6 +386,7 @@ def scanauxbus(target):
   print ("-----------------------")
   print ("Initiating AUXBUS SCAN ")
   print ("-----------------------")
+  print ("     Timestamp - Sender                  Hex   -> Receiver                Hex   --- Command      Hex   --- Value")
   if target=='known':
     for device in devices:
       transmitmsg('3b','',device,0xfe,'')
@@ -419,7 +420,7 @@ def printactivedevices():
   print ("-----------------------")
   listactivedevices=list(activedevices)
   for device in activedevices:
-    output = str(listactivedevices.index(device))+ ") " + devices[int(device,16)] + " (" + str(device) + ") - " + activedevices[device]
+    output = str(listactivedevices.index(device))+ ") " + devices[int(device,16)] + " (0x" + format(int(device,16),'02x') + ") - " + activedevices[device]
     print (output)
   
 def resettime():
