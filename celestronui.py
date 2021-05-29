@@ -5,10 +5,21 @@ __author__ = "Patricio Latini"
 __copyright__ = "Copyright 2020, Patricio Latini"
 __credits__ = "Patricio Latini"
 __license__ = "GPLv3"
-__version__ = "0.9.1"
+__version__ = "0.10.1"
 __maintainer__ = "Patricio Latini"
 __email__ = "p_latini@hotmail.com"
 __status__ = "Production"
+__mode__ = "UI"
+
+##### TKINTER CODE
+import tkinter as tk
+from tkinter import ttk
+from tkinter import scrolledtext
+from tkinter import messagebox
+import serial.tools.list_ports
+import re
+import queue
+##### TKINTER CODE
 
 import sys, getopt
 import socket
@@ -49,7 +60,6 @@ mounts = {
             0x0001 : 'Nexstar GPS',
             0x0783 : 'Nexstar SLT',
             0x1189 : 'CPC Deluxe',
-            0x1283 : 'GT Series',
             0x1485 : 'AVX',
             0x1687 : 'Nexstar Evolution 8',
             0x1788 : 'CGX'}
@@ -168,7 +178,11 @@ BUFFER_SIZE = 100
 KEEP_ALIVE_INTERVAL = 10
 
 def xprint(*args):
-    print(" ".join(map(str,args)))
+    if __mode__ == 'text':
+      print(" ".join(map(str,args)))
+    if __mode__ == 'UI':
+      q.put(" ".join(map(str,args))) 
+      app.event_generate('<<AppendLine>>', when='tail') 
 
 def decodemsg(msg):
     global mount
@@ -487,7 +501,7 @@ def transmitmsg(msgtype,sender,receiver,command,value):
 
 def keep_alive(interval):
     global endthread
-    while not endthread:
+    while not endthread:     
         if keepalive:
             transmitmsg('3b','',0x10,0xfe,'')
         time.sleep(interval)
@@ -517,6 +531,7 @@ def receivedata():
 
 def sendingdata(interval):
   global triggerscan
+  lasttx = 0
   while not endthread:
       time.sleep(.05)
       if triggerscan == 'known' or triggerscan == 'all':
@@ -527,7 +542,6 @@ def sendingdata(interval):
           if time.time()-lasttx > interval:
              transmitmsg('3b','',0x10,0xfe,'')
              lasttx = time.time()
-      
 
 def fileplayback(filename):
     global msgqueue
@@ -626,7 +640,6 @@ def closeconn():
 
 def launchthreads():
     global t0,t1,t2
-    global keepalive
     
     t0 = threading.Thread(target=receivedata)
     t0.daemon = True
@@ -650,6 +663,8 @@ def mainloop():
   global oof
   global triggerscan
 
+  printhelpmenu()
+  
   while True:
     inputkey = input("Enter Command:")
     if inputkey == "d":
@@ -738,7 +753,127 @@ def mainloop():
         break
     time.sleep(.1)
 
+#### TKINTER
+def validate(P):
+    test = re.compile('(^\d{0,3}$|^\d{1,3}\.\d{0,3}$|^\d{1,3}\.\d{1,3}\.\d{0,3}$|^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{0,3}$)')
+    if test.match(P):
+        return True
+    else:
+        return False
+
+def serial_ports():
+    ports = serial.tools.list_ports.comports()
+    portlist = []
+    for port in sorted(ports):
+        portlist.append(port.device)
+    return portlist
+
+def connect():
+    global connectbutton_text
+    if connectbutton_text.get() == "Connect":
+        if radioValue.get() != ' ':
+            connmode = radioValue.get()
+            if (radioValue.get() == 'wifi'):
+                port = ipadd.get()
+            else:
+                port = comboExample.get().split(' ', 1)[0]
+        else:
+            return
+    ##messagebox.showinfo(connmode,port)
+        initializeconn(connmode, port)
+        appstartup()
+        connectbutton_text.set("Disconnect")
+    else:
+        closeconn()
+        connectbutton_text.set("Connect")
+    
+def appendLine(event): 
+    line = q.get_nowait()
+    text_area.insert(tk.END, str(line)+"\n")
+    text_area.see(tk.END)
+
+def triggerbusscan():
+    global triggerscan 
+    triggerscan = 'known'
+
+def updateCBvar():
+    global keepalive
+    global verbose
+    global filecsvoutput
+    global rawfileoutput
+    global emulategps
+    keepalive = CBkeepalive.get()
+    verbose = CBverbose.get()
+    filecsvoutput = CBfilecsvoutput.get()
+    rawfileoutput = CBrawfileoutput.get()
+    emulategps = CBemulategps.get()
+
+
+def tkinterinit():
+    global keepalive
+    global verbose
+    global filecsvoutput
+    global rawfileoutput
+    global emulategps
+    global q
+    global app
+    global radioValue,connectbutton_text,comboExample,ipadd,text_area
+    global CBkeepalive,CBverbose,CBfilecsvoutput,CBrawfileoutput,CBemulategps
+
+    q = queue.Queue()
+    app = tk.Tk() 
+    app.geometry('1024x768')
+    app_title = tk.StringVar()
+    app_title.set("Celestron AUXBUS Scanner " + __version__)
+    app.title(app_title.get())
+    app.bind('<<AppendLine>>', appendLine)
+
+    radioValue = tk.StringVar() 
+    radioValue.set(' ')
+    radioOne = tk.Radiobutton(app, text='Serial', variable=radioValue, value="serial") 
+    radioTwo = tk.Radiobutton(app, text='Hand Controller', variable=radioValue, value="hc") 
+    radioThree = tk.Radiobutton(app, text='WiFi', variable=radioValue, value="wifi")
+    connectbutton_text = tk.StringVar()
+    connectbutton_text.set("Connect")
+    connectbutton = tk.Button(app, textvariable=connectbutton_text, command=connect)
+    scanbutton = tk.Button(app, text='Rescan AUXBUS', command=triggerbusscan)
+    devicebutton = tk.Button(app, text='Device List', command=printactivedevices)
+    comboExample = ttk.Combobox(app, values=serial_ports())
+    comboExample.current(0)
+    varip = tk.StringVar()
+    vcmd = app.register(validate)
+    ipadd = tk.Entry(app, textvariable = varip, width = 23, validate = 'key', validatecommand = (vcmd, '%P'))
+    text_area = scrolledtext.ScrolledText(app, wrap = tk.WORD, width = 120, height = 40)
+    CBkeepalive = tk.BooleanVar()
+    CBverbose = tk.BooleanVar()
+    CBfilecsvoutput = tk.BooleanVar()
+    CBrawfileoutput = tk.BooleanVar()
+    CBemulategps = tk.BooleanVar()
+    checkButton1 = tk.Checkbutton(app, text='Send Keepalives',variable=CBkeepalive, onvalue=True, offvalue=False,command=updateCBvar)
+    checkButton2 = tk.Checkbutton(app, text='Verbose Output',variable=CBverbose, onvalue=True, offvalue=False,command=updateCBvar)
+    checkButton3 = tk.Checkbutton(app, text='CSV Output',variable=CBfilecsvoutput, onvalue=True, offvalue=False,command=updateCBvar)
+    checkButton4 = tk.Checkbutton(app, text='Write rawoutput',variable=CBrawfileoutput, onvalue=True, offvalue=False,command=updateCBvar)
+    checkButton5 = tk.Checkbutton(app, text='GPS Emulator',variable=CBemulategps, onvalue=True, offvalue=False,command=updateCBvar)
+    radioOne.grid(column=0, row=0)
+    radioTwo.grid(column=1, row=0)
+    radioThree.grid(column=2, row=0)
+    scanbutton.grid(column=3,row=0,rowspan=1)
+    devicebutton.grid(column=3,row=1,rowspan=1)
+    connectbutton.grid(column=4,row=0,rowspan=2)
+    comboExample.grid(column=0, row=1, columnspan=2)
+    ipadd.grid(row = 1, column = 2, padx = 5, pady = 5)
+    checkButton1.grid(column=0, row=2)
+    checkButton2.grid(column=1, row=2)
+    checkButton3.grid(column=2, row=2)
+    checkButton4.grid(column=3, row=2)
+    checkButton5.grid(column=4, row=2)
+    text_area.grid(row = 3, column = 0, pady = 10, padx = 10, columnspan = 5)
+    app.mainloop()
+
+##### TKNTER
+
 def main():
+  if __mode__ == 'text': 
     parser = argparse.ArgumentParser()
     parser.add_argument('connmode', help='connection mode (wifi / serial / hc)')
     parser.add_argument('port', help='connection port (ip address / COM Port')
@@ -746,6 +881,8 @@ def main():
     initializeconn(args.connmode, args.port)
     appstartup()
     mainloop()
+  if __mode__ == 'UI':   
+    tkinterinit()
 
 if __name__ == '__main__':
     main()
