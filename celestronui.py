@@ -5,7 +5,7 @@ __author__ = "Patricio Latini"
 __copyright__ = "Copyright 2020, Patricio Latini"
 __credits__ = "Patricio Latini"
 __license__ = "GPLv3"
-__version__ = "0.10.1"
+__version__ = "0.10.2"
 __maintainer__ = "Patricio Latini"
 __email__ = "p_latini@hotmail.com"
 __status__ = "Production"
@@ -60,6 +60,7 @@ mounts = {
             0x0001 : 'Nexstar GPS',
             0x0783 : 'Nexstar SLT',
             0x1189 : 'CPC Deluxe',
+            0x1283 : 'GT Series',
             0x1485 : 'AVX',
             0x1687 : 'Nexstar Evolution 8',
             0x1788 : 'CGX'}
@@ -841,6 +842,7 @@ def tkinterinit():
     comboExample = ttk.Combobox(app, values=serial_ports())
     comboExample.current(0)
     varip = tk.StringVar()
+    varip.set('1.2.3.4')
     vcmd = app.register(validate)
     ipadd = tk.Entry(app, textvariable = varip, width = 23, validate = 'key', validatecommand = (vcmd, '%P'))
     text_area = scrolledtext.ScrolledText(app, wrap = tk.WORD, width = 120, height = 40)
