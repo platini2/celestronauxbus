@@ -2,10 +2,10 @@
 
 """Celestron.py: Celestron AUXBUS Scanner"""
 __author__ = "Patricio Latini"
-__copyright__ = "Copyright 2020, Patricio Latini"
+__copyright__ = "Copyright 2021, Patricio Latini"
 __credits__ = "Patricio Latini"
 __license__ = "GPLv3"
-__version__ = "0.10.2"
+__version__ = "0.11.0"
 __maintainer__ = "Patricio Latini"
 __email__ = "p_latini@hotmail.com"
 __status__ = "Production"
@@ -66,29 +66,29 @@ mounts = {
             0x1788 : 'CGX'}
 
 devices = {
-            0x01 : 'Main Board            ',
-            0x04 : 'Nexstar HC            ',
-            0x0d : 'Nexstar+ HC           ',
-            0x0e : 'Starsense HC          ',
-            0x10 : 'AZM MC                ',
-            0x11 : 'ALT MC                ', 
-            0x12 : 'Focuser               ',
-            0x17 : '?????                 ', 
-            0x20 : 'CPWI                  ',
-            0x21 : 'CFM                   ',
-            0x22 : 'AUXBUS Scanner        ',
-            0x30 : 'CGX RA Switch         ',
-            0x31 : 'CGX DEC Switch        ',
-            0x32 : 'CGX DEC Autoguide Port',
-            0xb0 : 'GPS                   ',
-            0xb2 : 'RTC                   ',
-            0xb3 : 'Skyportal Accessory   ',
-            0xb4 : 'Starsense Camera      ',
-            0xb5 : 'Nexstar EVO WiFi      ',
-            0xb6 : 'Battery Power Cont    ',
-            0xb7 : 'Charge Port           ',
-            0xb8 : 'Starsense Camera SkyW ',
-            0xbf : 'Mount Lights          '}
+            0x01 : 'Main Board',
+            0x04 : 'Nexstar HC',
+            0x0d : 'Nexstar+ HC',
+            0x0e : 'Starsense HC',
+            0x10 : 'AZM MC',
+            0x11 : 'ALT MC', 
+            0x12 : 'Focuser',
+            0x17 : '?????', 
+            0x20 : 'CPWI',
+            0x21 : 'CFM',
+            0x22 : 'AUXBUS Scanner',
+            0x30 : 'CGX RA Switch',
+            0x31 : 'CGX DEC Switch',
+            0x32 : 'CGX DEC Autoguide Pt',
+            0xb0 : 'GPS',
+            0xb2 : 'RTC',
+            0xb3 : 'Skyportal Accessory',
+            0xb4 : 'Starsense Camera',
+            0xb5 : 'Nexstar EVO WiFi',
+            0xb6 : 'Battery Power Cont',
+            0xb7 : 'Charge Port',
+            0xb8 : 'Starsense Camera SW',
+            0xbf : 'Mount Lights'}
 
 controllers = [ 0x04 , 0x0d , 0x0e , 0x20, 0x21, 0x22 ]
 activedevices = {}
@@ -104,45 +104,60 @@ commands = {
             (0x10, 0x05) : 'MC_GET_MODEL',
             (0x10, 0x06) : 'MC_SET_POS_GUIDERATE',
             (0x10, 0x07) : 'MC_SET_NEG_GUIDERATE',
-            (0x10, 0x0b) : 'MC_LEVEL_START',
             (0x10, 0x0c) : 'MC_PEC_RECORD_START',
             (0x10, 0x0d) : 'MC_PEC_PLAYBACK',
             (0x10, 0x10) : 'MC_SET_POS_BACKLASH',
             (0x10, 0x11) : 'MC_SET_NEG_BACKLASH',
-            (0x10, 0x12) : 'MC_LEVEL_DONE',   
             (0x10, 0x13) : 'MC_SLEW_DONE',
             (0x10, 0x14) : 'MC_XXXX',
             (0x10, 0x15) : 'MC_PEC_RECORD_DONE',
             (0x10, 0x16) : 'MC_PEC_RECORD_STOP',
             (0x10, 0x17) : 'MC_GOTO_SLOW',
+            (0x10, 0x18) : 'MC_AT_INDEX',
+            (0x10, 0x19) : 'MC_SEEK_INDEX',
             (0x10, 0x21) : 'MC_GET_MAX_SLEW_RATE',
             (0x10, 0x23) : 'MC_GET_MAX_RATE',
             (0x10, 0x24) : 'MC_MOVE_POS',
             (0x10, 0x25) : 'MC_MOVE_NEG',
+            (0x10, 0x38) : 'MC_ENABLE_CORDWRAP',
+            (0x10, 0x39) : 'MC_DISABLE_CORDWRAP',
             (0x10, 0x3a) : 'MC_SET_CORDWRAP_POS',
             (0x10, 0x3b) : 'MC_POLL_CORDWRAP',
             (0x10, 0x3c) : 'MC_GET_CORDWRAP_POS',
             (0x10, 0x40) : 'MC_GET_POS_BACKLASH',
             (0x10, 0x41) : 'MC_GET_NEG_BACKLASH',
+            (0x10, 0x46) : 'MC_SET_AUTOGUIDE_RATE',        
             (0x10, 0x47) : 'MC_GET_AUTOGUIDE_RATE',
-            (0x10, 0xfc) : 'MC_GET_APPROACH',       
-            (0x10, 0xfe) : 'MC_GET_FW_VER',
+            (0x10, 0xfc) : 'MC_GET_APPROACH',
+            (0x10, 0xfd) : 'MC_SET_APPROACH',           
+            (0x10, 0xfe) : 'MC_GET_FW_VER',         
             (0x11, 0x01) : 'MC_GET_POSITION', 
-            (0x11, 0x02) : 'MC_GOTO_FAST', 
+            (0x11, 0x02) : 'MC_GOTO_FAST',
+            (0x11, 0x04) : 'MC_SET_POSITION', 
             (0x11, 0x05) : 'MC_GET_MODEL',
             (0x11, 0x06) : 'MC_SET_POS_GUIDERATE',
+            (0x11, 0x07) : 'MC_SET_NEG_GUIDERATE',
+            (0x11, 0x0b) : 'MC_LEVEL_START',
+            (0x11, 0x0c) : 'MC_PEC_RECORD_START',
+            (0x11, 0x0d) : 'MC_PEC_PLAYBACK',
+            (0x11, 0x10) : 'MC_SET_POS_BACKLASH',
+            (0x11, 0x11) : 'MC_SET_NEG_BACKLASH',
+            (0x11, 0x12) : 'MC_LEVEL_DONE', 
             (0x11, 0x13) : 'MC_SLEW_DONE',
+            (0x11, 0x14) : 'MC_XXXX',
+            (0x11, 0x15) : 'MC_PEC_RECORD_DONE',
+            (0x11, 0x16) : 'MC_PEC_RECORD_STOP',
+            (0x11, 0x17) : 'MC_GOTO_SLOW',
             (0x11, 0x21) : 'MC_GET_MAX_SLEW_RATE',
             (0x11, 0x23) : 'MC_GET_MAX_RATE',
             (0x11, 0x24) : 'MC_MOVE_POS',
             (0x11, 0x25) : 'MC_MOVE_NEG',
-            (0x11, 0x3a) : 'MC_SET_CORDWRAP_POS',
-            (0x11, 0x3b) : 'MC_POLL_CORDWRAP',
-            (0x11, 0x3c) : 'MC_GET_CORDWRAP_POS',
             (0x11, 0x40) : 'MC_GET_POS_BACKLASH',
             (0x11, 0x41) : 'MC_GET_NEG_BACKLASH',
+            (0x11, 0x46) : 'MC_SET_AUTOGUIDE_RATE',
             (0x11, 0x47) : 'MC_GET_AUTOGUIDE_RATE',
-            (0x11, 0xfc) : 'MC_GET_APPROACH',       
+            (0x11, 0xfc) : 'MC_GET_APPROACH',
+            (0x11, 0xfd) : 'MC_SET_APPROACH',    
             (0x11, 0xfe) : 'MC_GET_FW_VER',
             (0x12, 0x01) : 'FOCUS_GET_POSITION',   
             (0x12, 0x02) : 'FOCUS_GOTO_FAST', 
@@ -158,11 +173,15 @@ commands = {
             (0xb0, 0x02) : 'GPS_GET_LONG',
             (0xb0, 0x03) : 'GPS_GET_DATE',
             (0xb0, 0x04) : 'GPS_GET_YEAR',
+            (0xb0, 0x07) : 'GPS_GET_SAT_INFO',
+            (0xb0, 0x08) : 'GPS_GET_RCVR_STATUS',
             (0xb0, 0x33) : 'GPS_GET_TIME',
             (0xb0, 0x36) : 'GPS_TIME_VALID',
             (0xb0, 0x37) : 'GPS_LINKED',
+            (0xb0, 0xa0) : 'GPS_GET_COMPASS',
             (0xb0, 0xfe) : 'GPS_GET_FW_VER',
             (0xb3, 0xfe) : 'WIFI_GET_FW_VER',
+            (0xb4, 0x3f) : 'SS_ALIGN_CENTER',
             (0xb4, 0xfe) : 'SS_GET_FW_VER',
             (0xb5, 0xfe) : 'WIFI_GET_FW_VER',
             (0xb6, 0x10) : 'BAT_GET_VOLTAGE',
@@ -178,12 +197,96 @@ SERVER_PORT = 2000
 BUFFER_SIZE = 100
 KEEP_ALIVE_INTERVAL = 10
 
+def twos_comp(val, bits):
+    """compute the 2's complement of int value val"""
+    if (val & (1 << (bits - 1))) != 0: # if sign bit is set e.g., 8bit: 128-255
+        val = val - (1 << bits)        # compute negative value
+    return val 
+
+def decdeg2dms(dd):
+    d = int(dd)
+    m = int((abs(dd) - abs(d)) * 60)
+    s = round((abs(dd) - abs(d) - m/60) * 3600.00,2)
+    return d,m,s
+
 def xprint(*args):
     if __mode__ == 'text':
       print(" ".join(map(str,args)))
     if __mode__ == 'UI':
       q.put(" ".join(map(str,args))) 
-      app.event_generate('<<AppendLine>>', when='tail') 
+      app.event_generate('<<AppendLine>>', when='tail')
+
+def decodecommandvalue(sender,device,command,commandvalue):
+    if hex(command) == '0xfe':
+        if len(commandvalue)<4:
+            commandvalue = '.'.join([format(int(c, 16)) for c in commandvalue])
+        else:
+            commandvalue = format(int(commandvalue[0], 16)) + '.' + format(int(commandvalue[1], 16))+ '.' + str(int(format(int(commandvalue[2],16), '02x')+format(int(commandvalue[3],16), '02x'),16))
+    elif hex(device) == '0x10' or hex(device) == '0x11':
+        if hex(command) == '0x1' or hex(command) == '0x2' or hex(command) == '0x3c':
+            commandvaluehex = ''.join([format(int(c, 16), '02x') for c in commandvalue])   
+            latitude=twos_comp(int(commandvaluehex,16),24)
+            latitude=latitude*360/pow(2,24)
+            d,m,s = decdeg2dms(latitude)
+            commandvalue = format(d) + '°' + format(m) + '\'' + format(s) + '"'
+        elif hex(command) == '0x17' or hex(command) == '0x6' or hex(command) == '0x7':
+            if sender == device:
+                if hex(int(commandvalue[0],16)) == '0x1': commandvalue = '1 - ACK'
+            else:
+                commandvaluehex = ''.join([format(int(c, 16), '02x') for c in commandvalue])   
+                latitude=twos_comp(int(commandvaluehex,16),24)
+                latitude=latitude*360/pow(2,24)
+                d,m,s = decdeg2dms(latitude)
+                commandvalue = format(d) + '°' + format(m) + '\'' + format(s) + '"'
+        elif hex(command) == '0x5':
+            commandvalue = format(''.join([format(int(c, 16), '02x') for c in commandvalue]))
+        elif hex(command) == '0x13':
+            if hex(int(commandvalue[0],16)) == '0x0': commandvalue = '0 - Not Done'
+            elif hex(int(commandvalue[0],16)) == '0x1': commandvalue = '1 - Check'
+            elif hex(int(commandvalue[0],16)) == '0xff': commandvalue = '255 - Done'
+        elif hex(command) == '0x23':
+            if hex(int(commandvalue[0],16)) == '0x0': commandvalue = '0 - Disabled'
+            elif hex(int(commandvalue[0],16)) == '0x1': commandvalue = '1 - Enabled'
+        elif hex(command) == '0x24' or hex(command) == '0x25' or hex(command) == '0x40' or hex(command) == '0x41':
+            commandvalue = format(int(commandvalue[0],16))
+        elif hex(command) == '0x3b':
+            if hex(int(commandvalue[0],16)) == '0x0': commandvalue = '0 - Disabled'
+            elif hex(int(commandvalue[0],16)) == '0xff': commandvalue = '255 - Enabled'
+        elif hex(command) == '0x46' or hex(command) == '0x47':
+            commandvalue = format(100*int(commandvalue[0],16)/256)
+        elif hex(command) == '0xfc' or hex(command) == '0xfd':
+            if hex(int(commandvalue[0],16)) == '0x0': commandvalue = '0 - Positive'
+            elif hex(int(commandvalue[0],16)) == '0x1': commandvalue = '1 - Negative'
+    elif hex(device) == '0xb0':
+        if hex(command) == '0x1' or hex(command) == '0x2':
+            commandvaluehex = ''.join([format(int(c, 16), '02x') for c in commandvalue])   
+            latitude=twos_comp(int(commandvaluehex,16),24)
+            latitude=latitude*360/pow(2,24)
+            d,m,s = decdeg2dms(latitude)
+            commandvalue = format(d) + '°' + format(m) + '\'' + format(s) + '"'
+        elif hex(command) == '0x3':
+            commandvalue = format(int(commandvalue[0], 16)) + '/' + format(int(commandvalue[1], 16))
+        elif hex(command) == '0x4':
+            commandvalue = format(int(''.join([format(int(c, 16), '02x') for c in commandvalue]), 16))
+        elif hex(command) == '0x7':
+            commandvalue = format(int(commandvalue[0], 16)) + ' - ' + format(int(commandvalue[1], 16))
+        elif hex(command) == '0x33':
+            commandvalue = format(int(commandvalue[0], 16)) + ':' + format(int(commandvalue[1], 16))+ ':' + format(int(commandvalue[2], 16))
+        elif hex(command) == '0x36' or hex(command) == '0x37':
+            if hex(int(commandvalue[0],16)) == '0x0': commandvalue = '0 - No'
+            elif hex(int(commandvalue[0],16)) == '0x1': commandvalue = '1 - Yes'
+    elif hex(device) == '0xb4':
+        if hex(command) == '0x3f':
+            if len(commandvalue)== 8:
+                centerx = ''.join([format(int(c, 16), '02x') for c in reversed(commandvalue[0:4])])
+                centery = ''.join([format(int(c, 16), '02x') for c in reversed(commandvalue[4:8])])
+                commandvalue = format(int(centerx, 16)) + ' - ' + format(int(centery, 16))
+            else:
+                commandvalue = format(int(commandvalue[0],16))
+    else:
+        commandvaluehex = ''.join([format(int(c, 16), '02x') for c in commandvalue])         
+        commandvalue = commandvaluehex
+    return commandvalue
 
 def decodemsg(msg):
     global mount
@@ -225,17 +328,13 @@ def decodemsg(msg):
           device = receiver
       if len(commandvalue)>0:
         if hex(command) == '0xfe':
-          if len(commandvalue)<4:
-            commandvalue = '.'.join([format(int(c, 16)) for c in commandvalue])
-          else:
-            commandvalue = format(int(commandvalue[0], 16)) + '.' + format(int(commandvalue[1], 16))+ '.' + str(int(format(int(commandvalue[2],16), '02x')+format(int(commandvalue[3],16), '02x'),16))
+          commandvalue = decodecommandvalue(sender,device,command,commandvalue)
           if len(commandvalue)>0:
             activedevices.update({hex(sender):commandvalue}) if hex(sender) not in activedevices else activedevices
         else:
-          commandvaluehex = ''.join([format(int(c, 16), '02x') for c in commandvalue])
-          commandvalue = (int(commandvaluehex,16))
+          commandvalue = decodecommandvalue(sender,device,command,commandvalue)
           if hex(command) == '0x5' and hex(sender) == '0x10':
-            mount = commandvalue
+            mount = int(commandvalue,16)
       if (device,command) in commands:
           commandtext = commands[(device,command)]
       else:
@@ -252,7 +351,7 @@ def decodemsg(msg):
           dumptext = ' --- ' + str(msg)
       else:
           dumptext = ''
-      output = str(format(round(time.time()-starttime,6),'14.6f')) + " - " + sendertext + " (0x" + str(format(sender,'02x')) + ") " + "-> " + receivertext + " (0x" + str(format(receiver,'02x')) + ") " + "--- " + commandtext + " (0x" + str(format(command,'02x')) + ") " + "--- " + str(commandvalue) + dumptext
+      output = str(format(round(time.time()-starttime,6),'14.6f')) + " - " + "{:<20}".format(sendertext) + " (0x" + str(format(sender,'02x')) + ") " + "-> " + "{:<20}".format(receivertext) + " (0x" + str(format(receiver,'02x')) + ") " + "--- " + "{:<20}".format(commandtext) + " (0x" + str(format(command,'02x')) + ") " + "--- " + str(commandvalue) + dumptext
       xprint (output)
       if filecsvoutput:
           fileoutput = str(format(round(time.time()-starttime,6),'14.6f')) + "," + sendertext + "," + str(hex(sender)) + ","  + receivertext + "," + str(hex(receiver)) + ","  + commandtext + "," + str(hex(command)) + "," + str(commandvalue) + "," + str(msg)
@@ -440,7 +539,7 @@ def printactivedevices():
   xprint ("-----------------------")
   listactivedevices=list(activedevices)
   for device in activedevices:
-    output = str(listactivedevices.index(device))+ ") " + devices[int(device,16)] + " (0x" + format(int(device,16),'02x') + ") - " + activedevices[device]
+    output = str(listactivedevices.index(device))+ ") " + "{:<20}".format(devices[int(device,16)]) + " (0x" + format(int(device,16),'02x') + ") - " + activedevices[device]
     xprint (output)
   
 def resettime():
