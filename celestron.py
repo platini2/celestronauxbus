@@ -5,7 +5,7 @@ __author__ = "Patricio Latini"
 __copyright__ = "Copyright 2021, Patricio Latini"
 __credits__ = "Patricio Latini"
 __license__ = "GPLv3"
-__version__ = "0.9.20"
+__version__ = "0.9.21"
 __maintainer__ = "Patricio Latini"
 __email__ = "p_latini@hotmail.com"
 __status__ = "Production"
@@ -20,7 +20,7 @@ import keyboard
 import argparse
 import os
 from datetime import datetime,timezone
-from PIL import Image
+#from PIL import Image
 
 global triggerscan
 triggerscan = ' '
@@ -80,6 +80,7 @@ devices = {
             0xb6 : 'Battery Power Cont',
             0xb7 : 'Charge Port',
             0xb8 : 'Starsense Camera SW',
+            0xbb : 'Dew Heater Controller',
             0xbf : 'Mount Lights'}
 
 controllers = [ 0x04 , 0x0d , 0x0e , 0x20, 0x21, 0x22 ]
@@ -254,8 +255,10 @@ commands = {
             (0xb0, 0xa0) : 'GPS_GET_COMPASS',
             (0xb0, 0xfe) : 'GPS_GET_FW_VER',
             (0xb3, 0xfe) : 'WIFI_GET_FW_VER',
+            (0xb4, 0x3e) : 'SS_SET_ALIGN_CENTER',
             (0xb4, 0x3f) : 'SS_GET_ALIGN_CENTER',
-            (0xb4, 0x90) : 'SS_SET_ALIGN_CAPTUR',
+            (0xb4, 0x90) : 'SS_GET_ALIGN_CAPTUR',
+            (0xb4, 0x91) : 'SS_GET_STAR_COUNT',
             (0xb4, 0x92) : 'SS_GET_IMAGE2',
             (0xb4, 0x94) : 'SS_GET_IMAGE1',
             (0xb4, 0x9f) : 'SS_GET_IMAGE3',
@@ -267,6 +270,7 @@ commands = {
             (0xb6, 0xfe) : 'BAT_GET_FW_VER',
             (0xb7, 0x10) : 'CHG_GET_MODE',
             (0xb7, 0xfe) : 'CHG_GET_FW_VER',
+            (0xbb, 0xfe) : 'DEWHEATER_GET_FW_VER',
             (0xbf, 0x10) : 'LIGHT_GET_LEVEL',
             (0xbf, 0xfe) : 'LIGHT_GET_FW_VER'}
 
