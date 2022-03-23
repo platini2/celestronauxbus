@@ -5,7 +5,7 @@ __author__ = "Patricio Latini"
 __copyright__ = "Copyright 2021, Patricio Latini"
 __credits__ = "Patricio Latini"
 __license__ = "GPLv3"
-__version__ = "0.9.21"
+__version__ = "0.9.22"
 __maintainer__ = "Patricio Latini"
 __email__ = "p_latini@hotmail.com"
 __status__ = "Production"
@@ -658,8 +658,9 @@ def scanauxbus(target):
   if target=='all':
     for device in range(0x01,0xff):
       transmitmsg('3b','',device,0xfe,'')
+  time.sleep(0.5) 
   identifymount()
-  time.sleep(1.5)  
+  time.sleep(1)  
   xprint ("-----------------------")
   xprint (" Finished AUXBUS SCAN  ")
   xprint ("-----------------------")
