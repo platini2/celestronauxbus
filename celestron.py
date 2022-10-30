@@ -5,7 +5,7 @@ __author__ = "Patricio Latini"
 __copyright__ = "Copyright 2021, Patricio Latini"
 __credits__ = "Patricio Latini"
 __license__ = "GPLv3"
-__version__ = "0.9.22"
+__version__ = "0.9.23"
 __maintainer__ = "Patricio Latini"
 __email__ = "p_latini@hotmail.com"
 __status__ = "Production"
@@ -55,7 +55,8 @@ mounts = {
             0x1283 : 'GT Series',
             0x1485 : 'AVX',
             0x1687 : 'Nexstar Evolution 8',
-            0x1788 : 'CGX'}
+            0x1788 : 'CGX',
+            0x0c82 : '6/8SE'}
 
 devices = {
             0x01 : 'Main Board',
