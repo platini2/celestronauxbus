@@ -5,7 +5,7 @@ __author__ = "Patricio Latini"
 __copyright__ = "Copyright 2021, Patricio Latini"
 __credits__ = "Patricio Latini"
 __license__ = "GPLv3"
-__version__ = "0.9.23"
+__version__ = "0.9.25"
 __maintainer__ = "Patricio Latini"
 __email__ = "p_latini@hotmail.com"
 __status__ = "Production"
@@ -54,7 +54,7 @@ mounts = {
             0x1189 : 'CPC Deluxe',
             0x1283 : 'GT Series',
             0x1485 : 'AVX',
-            0x1687 : 'Nexstar Evolution 8',
+            0x1687 : 'Nexstar Evolution',
             0x1788 : 'CGX',
             0x0c82 : '6/8SE'}
 
@@ -66,7 +66,7 @@ devices = {
             0x10 : 'AZM MC',
             0x11 : 'ALT MC', 
             0x12 : 'Focuser',
-            0x17 : '?????', 
+            0x17 : 'Dew Heater Controller', 
             0x20 : 'CPWI',
             0x21 : 'CFM',
             0x22 : 'AUXBUS Scanner',
