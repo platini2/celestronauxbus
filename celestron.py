@@ -5,7 +5,7 @@ __author__ = "Patricio Latini"
 __copyright__ = "Copyright 2021, Patricio Latini"
 __credits__ = "Patricio Latini"
 __license__ = "GPLv3"
-__version__ = "0.9.25"
+__version__ = "0.9.26"
 __maintainer__ = "Patricio Latini"
 __email__ = "p_latini@hotmail.com"
 __status__ = "Production"
@@ -685,7 +685,7 @@ def printactivedevices():
   xprint ("-----------------------")
   listactivedevices=list(activedevices)
   for device in activedevices:
-    output = str(listactivedevices.index(device))+ ") " + "{:<20}".format(devices[int(device,16)]) + " (0x" + format(int(device,16),'02x') + ") - " + activedevices[device]
+    output = str(listactivedevices.index(device))+ ") " + "{:<21}".format(devices[int(device,16)]) + " (0x" + format(int(device,16),'02x') + ") - " + activedevices[device]
     xprint (output)
   
 def resettime():

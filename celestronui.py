@@ -5,7 +5,7 @@ __author__ = "Patricio Latini"
 __copyright__ = "Copyright 2021, Patricio Latini"
 __credits__ = "Patricio Latini"
 __license__ = "GPLv3"
-__version__ = "0.12.0"
+__version__ = "0.12.26"
 __maintainer__ = "Patricio Latini"
 __email__ = "p_latini@hotmail.com"
 __status__ = "Production"
@@ -44,6 +44,8 @@ global mount
 mount = ''
 global verbose
 verbose = False
+global starsensesave
+starsensesave = False
 global filecsvoutput
 filecsvoutput = False
 global rawfileoutput
@@ -62,8 +64,9 @@ mounts = {
             0x1189 : 'CPC Deluxe',
             0x1283 : 'GT Series',
             0x1485 : 'AVX',
-            0x1687 : 'Nexstar Evolution 8',
-            0x1788 : 'CGX'}
+            0x1687 : 'Nexstar Evolution',
+            0x1788 : 'CGX',
+            0x0c82 : '6/8SE'}
 
 devices = {
             0x01 : 'Main Board',
@@ -73,7 +76,7 @@ devices = {
             0x10 : 'AZM MC',
             0x11 : 'ALT MC', 
             0x12 : 'Focuser',
-            0x17 : '?????', 
+            0x17 : 'Dew Heater Controller',
             0x20 : 'CPWI',
             0x21 : 'CFM',
             0x22 : 'AUXBUS Scanner',
@@ -88,6 +91,7 @@ devices = {
             0xb6 : 'Battery Power Cont',
             0xb7 : 'Charge Port',
             0xb8 : 'Starsense Camera SW',
+            0xbb : 'Dew Heater Controller',
             0xbf : 'Mount Lights'}
 
 controllers = [ 0x04 , 0x0d , 0x0e , 0x20, 0x21, 0x22 ]
@@ -262,6 +266,13 @@ commands = {
             (0xb0, 0xa0) : 'GPS_GET_COMPASS',
             (0xb0, 0xfe) : 'GPS_GET_FW_VER',
             (0xb3, 0xfe) : 'WIFI_GET_FW_VER',
+            (0xb4, 0x3e) : 'SS_SET_ALIGN_CENTER',
+            (0xb4, 0x3f) : 'SS_GET_ALIGN_CENTER',
+            (0xb4, 0x90) : 'SS_GET_ALIGN_CAPTUR',
+            (0xb4, 0x91) : 'SS_GET_STAR_COUNT',
+            (0xb4, 0x92) : 'SS_GET_IMAGE2',
+            (0xb4, 0x94) : 'SS_GET_IMAGE1',
+            (0xb4, 0x9f) : 'SS_GET_IMAGE3',
             (0xb4, 0x3f) : 'SS_ALIGN_CENTER',
             (0xb4, 0xfe) : 'SS_GET_FW_VER',
             (0xb5, 0xfe) : 'WIFI_GET_FW_VER',
@@ -270,6 +281,7 @@ commands = {
             (0xb6, 0xfe) : 'BAT_GET_FW_VER',
             (0xb7, 0x10) : 'CHG_GET_MODE',
             (0xb7, 0xfe) : 'CHG_GET_FW_VER',
+            (0xbb, 0xfe) : 'DEWHEATER_GET_FW_VER',
             (0xbf, 0x10) : 'LIGHT_GET_LEVEL',
             (0xbf, 0xfe) : 'LIGHT_GET_FW_VER'}
 
@@ -283,6 +295,15 @@ def twos_comp(val, bits):
     if (val & (1 << (bits - 1))) != 0: # if sign bit is set e.g., 8bit: 128-255
         val = val - (1 << bits)        # compute negative value
     return val 
+
+def tosigned24(hexnum):
+    n = int(hexnum,16)
+    n = n & 0xffffff
+    return n | (-(n & 0x800000))
+
+def hextoposition(hexnum):
+    position = tosigned24(hexnum)/pow(2,24)*360
+    return position
 
 def decdeg2dms(dd):
     d = int(dd)
@@ -471,7 +492,31 @@ def decodemsg(msg):
       output = str(hex(sender)+ " -> " + hex(receiver) + " --- " + hex(command) + " --- " + ' '.join(map(str, commandvalue)) + " CRC FAIL!")
       xprint (output)
 
+def decodestarsensestar(msg):
+    ssxfov=6.88
+    ssyfov=5.16
+    msg="".join(reversed([msg[i:i+2] for i in range(0, len(msg), 2)]))
+    bx,px,by,py=int(msg[0:2],16)-64,int(msg[2:8],16),int(msg[8:10],16)-64,int(msg[10:16],16)
+    dx,mx,sx = decdeg2dms(twos_comp(int(msg[2:8],16),24)*ssxfov/pow(2,24))
+    dy,my,sy = decdeg2dms(twos_comp(int(msg[10:16],16),24)*ssyfov/pow(2,24))
+    px = format(dx) + '°' + format(mx) + '\'' + format(sx) + '"'
+    py = format(dy) + '°' + format(my) + '\'' + format(sy) + '"'
+    msg=str(bx) + " - " + "{:<11}".format(px) + " - " + str(by) + " - " + "{:<11}".format(py)
+    return msg
+
+def starsensepixel(msg,ssxres,ssyres):
+    msg="".join(reversed([msg[i:i+2] for i in range(0, len(msg), 2)]))
+    bx,px,by,py=int(msg[0:2],16)-64,int(msg[2:8],16),int(msg[8:10],16)-64,int(msg[10:16],16)
+    pixelx = int(ssxres/2+(twos_comp(int(msg[2:8],16),24)*ssxres/pow(2,24)))
+    pixely = int(ssyres/2+(twos_comp(int(msg[10:16],16),24)*ssyres/pow(2,24)))
+    return pixelx,pixely,bx,by
+
 def decodemsg3c(msg):
+    global starsensesave
+    starlen=2*8
+    pixellist = []
+    ssxres=1280
+    ssyres=960
     byte=0
     sum=0
     checksumok = 0
@@ -497,13 +542,38 @@ def decodemsg3c(msg):
           dumptext = ' --- ' + str(msg)
         else:
           dumptext = ''
-        output = str(format(round(time.time()-starttime,6),'14.6f')) + " - " + "Starsense Data: " + str(length) + " Bytes - Data: " + msg[5*2:-2] + dumptext
-        xprint (output)
+        output = str(format(round(time.time()-starttime,6),'14.6f')) + " - " + "Starsense HC Data - " + str(int(length)/8) + " Stars" + msg[5*2:-2] + dumptext
+        xprint (output)       
+        data=msg[5*2:-2]
+        stars=[data[i:i+starlen] for i in range(0, len(data), starlen)]
+        for star in stars:
+            if star!="0000000000000000":
+                xprint("                 Star ",stars.index(star)+1," - ",decodestarsensestar(star))
+                pixellist.append(starsensepixel(star,ssxres,ssyres))
+        if starsensesave:
+            img = Image.new('L', (ssxres, ssyres))
+            imagedata = [0] * ssxres * ssyres
+            for pixel in pixellist:
+                imagedata[pixel[0]+pixel[1]*ssxres] = 255
+                if pixel[2]>1:
+                    imagedata[(pixel[0]+1)+pixel[1]*ssxres] = 255
+                if pixel[2]>2:
+                    imagedata[(pixel[0]-1)+pixel[1]*ssxres] = 255
+                if pixel[2]>3:
+                    imagedata[(pixel[0]+2)+pixel[1]*ssxres] = 255
+                if pixel[3]>1:
+                    imagedata[pixel[0]+(pixel[1]+1)*ssxres] = 255
+                if pixel[3]>2:
+                    imagedata[pixel[0]+(pixel[1]-1)*ssxres] = 255
+                if pixel[3]>3:
+                    imagedata[pixel[0]+(pixel[1]+2)*ssxres] = 255
+            img.putdata(imagedata)
+            img.save('starsense-image.png')
         if filecsvoutput:
-        	fileoutput = str(format(round(time.time()-starttime,6),'14.6f')) + "," + "Starsense Camera" + "," + "0xb4" + ","  + "All" + "," + "0x00" + ","  + "Data" + "," + "0x00" + "," + "[]" + "," + str(msg)
-        	print(fileoutput,  file=open('auxbuslog.csv', 'a'))
+            fileoutput = str(format(round(time.time()-starttime,6),'14.6f')) + "," + "Starsense Camera" + "," + "0xb4" + ","  + "All" + "," + "0x00" + ","  + "Data" + "," + "0x00" + "," + "[]" + "," + str(msg)
+            print(fileoutput,  file=open('auxbuslog.csv', 'a'))
     else:
-    	xprint ("Starsense Data: CRC FAIL!")
+        xprint ("Starsense HC Data - CRC FAIL!")
 
 
 def processmsgqueue():
@@ -598,8 +668,9 @@ def scanauxbus(target):
   if target=='all':
     for device in range(0x01,0xff):
       transmitmsg('3b','',device,0xfe,'')
+  time.sleep(0.5)
   identifymount()
-  time.sleep(1.5)  
+  time.sleep(1)
   xprint ("-----------------------")
   xprint (" Finished AUXBUS SCAN  ")
   xprint ("-----------------------")
@@ -623,7 +694,7 @@ def printactivedevices():
   xprint ("-----------------------")
   listactivedevices=list(activedevices)
   for device in activedevices:
-    output = str(listactivedevices.index(device))+ ") " + "{:<20}".format(devices[int(device,16)]) + " (0x" + format(int(device,16),'02x') + ") - " + activedevices[device]
+    output = str(listactivedevices.index(device))+ ") " + "{:<21}".format(devices[int(device,16)]) + " (0x" + format(int(device,16),'02x') + ") - " + activedevices[device]
     xprint (output)
   
 def resettime():
@@ -642,6 +713,7 @@ def printhelpmenu():
   xprint ("v) toggle Verbose output")
   xprint ("f) toggle csv File output")
   xprint ("g) toggle GPS simulator")
+  xprint ("ss) toggle Starsense Image Save")
   xprint ("8) Read raw capture from file rawinput.txt")
   xprint ("9) Write raw capture to file rawoutput.txt")
   xprint ("r) Reset Packet Timer  ")
@@ -649,15 +721,6 @@ def printhelpmenu():
   xprint ("h) print this Help menu")
   xprint ("q) Quit                ")
   xprint ("-----------------------")
-
-def tosigned24(hexnum):
-    n = int(hexnum,16)
-    n = n & 0xffffff
-    return n | (-(n & 0x800000))
-
-def hextoposition(hexnum):
-    position = tosigned24(hexnum)/pow(2,24)*360
-    return position
 
 def transmitmsg(msgtype,sender,receiver,command,value):
     if msgtype=='3b':
@@ -846,6 +909,7 @@ def mainloop():
   global rawfileoutput
   global oof
   global triggerscan
+  global starsensesave
 
   printhelpmenu()
   
@@ -911,6 +975,8 @@ def mainloop():
         if filecsvoutput:
             fileoutput = 'timestamp,'+'sender,'+'sender_id,'+'receiver,'+'receiver_id,'+'command,'+'command_id,'+'command_data,'+'raw_packet'
             print(fileoutput, file=open('auxbuslog.csv','w'))
+    if inputkey == "ss":
+        starsensesave = not starsensesave
     if inputkey == "r":
         resettime()
     if inputkey == "h":
