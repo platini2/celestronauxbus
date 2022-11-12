@@ -5,7 +5,7 @@ __author__ = "Patricio Latini"
 __copyright__ = "Copyright 2021, Patricio Latini"
 __credits__ = "Patricio Latini"
 __license__ = "GPLv3"
-__version__ = "0.9.26"
+__version__ = "0.9.27"
 __maintainer__ = "Patricio Latini"
 __email__ = "p_latini@hotmail.com"
 __status__ = "Production"
@@ -242,7 +242,12 @@ commands = {
             (0x12, 0x2c) : 'FOCUS_XXX',
             (0x12, 0x3b) : 'FOCUS_XXX',
             (0x12, 0xfe) : 'FUCUS_GET_FW_VER',
-            (0x17, 0x10) : '?????_????',
+            (0x17, 0x00) : 'DEWHEATER_GET_CURRENT_POWER',
+            (0x17, 0x04) : 'DEWHEATER_GET_LIMIT_POWER',
+            (0x17, 0x10) : 'DEWHEATER_GET_POWER_PORTS',
+            (0x17, 0x11) : 'DEWHEATER_GET_PORTS',
+            (0x17, 0x12) : 'DEWHEATER_GET_STATUS',
+            (0x17, 0x18) : 'DEWHEATER_GET_AMBIENT', 
             (0x20, 0xfe) : 'NXS_GET_FW_VER',
             (0xb0, 0x01) : 'GPS_GET_LAT',    
             (0xb0, 0x02) : 'GPS_GET_LONG',
@@ -374,6 +379,39 @@ def decodecommandvalue(sender,device,command,commandvalue):
                 commandvalue = format(int(centerx, 16)) + ' - ' + format(int(centery, 16))
             else:
                 commandvalue = format(int(commandvalue[0],16))
+    elif hex(device) == '0x17':
+        if hex(command) == '0x0':
+            commandvalue = format(int(''.join([format(int(c, 16), '02x') for c in commandvalue[0:2]]), 16)/1000) + ' V - ' + format(int(''.join([format(int(c, 16), '02x') for c in commandvalue[2:4]]), 16)/1000) + ' A '
+        if hex(command) == '0x4':
+            commandvalue = format(int(''.join([format(int(c, 16), '02x') for c in commandvalue[0:2]]), 16)/1000) + ' A - ' + format(int(''.join([format(int(c, 16), '02x') for c in commandvalue[2:4]]), 16)/1000) + ' A '
+        if hex(command) == '0x10':
+            commandvalue = format(int(commandvalue[0], 16))
+        elif hex(command) == '0x11':
+            if hex(sender) != '0x17':
+                if hex(int(commandvalue[0],16)) == '0x0': commandvalue = '0 - Get 12V Ports'
+                elif hex(int(commandvalue[0],16)) == '0x1': commandvalue = '1 - Get Dew Heater Ports'
+            else:                
+               commandvalue = format(int(commandvalue[0], 16))
+        elif hex(command) == '0x12':
+            if hex(sender) != '0x17':
+                if hex(int(commandvalue[0],16)) == '0x0': commandvalue = '0 - Port 1'
+                elif hex(int(commandvalue[0],16)) == '0x1': commandvalue = '1 - Port 2'
+            else:
+                if hex(int(commandvalue[1],16)) == '0x0': mode = 'Manual'
+                elif hex(int(commandvalue[1],16)) == '0x1': mode = 'Auto'
+                if hex(int(commandvalue[2],16)) == '0x0':
+                    commandvalue = 'Port ' + format(int(commandvalue[0], 16)) + ' - ' + mode + ' - Power: Off ' + format(int(commandvalue[2], 16)) + ' - Agression ' + format(int(commandvalue[5], 16))
+                else:
+                    commandvaluehex = ''.join([format(int(c, 16), '02x') for c in commandvalue[6:10]])
+                    temp=int(commandvaluehex,16)/1000
+                    commandvalue = 'Port ' + format(int(commandvalue[0], 16)) + ' - ' + mode + ' - Power: On ' + format(int(commandvalue[2], 16)) + ' - Agression ' + format(int(commandvalue[5], 16)) + ' - Temp ' + format(temp)
+        elif hex(command) == '0x18':
+            commandvaluehex = ''.join([format(int(c, 16), '02x') for c in commandvalue[0:4]])   
+            temp=int(commandvaluehex,16)/1000
+            commandvaluehex = ''.join([format(int(c, 16), '02x') for c in commandvalue[4:8]])   
+            dew=int(commandvaluehex,16)/1000
+            commandvalue= 'Temp: ' + format(temp) + '°C Dew: ' + format(dew) + '°C Hum: ' + format(int(commandvalue[8], 16)) + '%'
+
     else:
         commandvaluehex = ''.join([format(int(c, 16), '02x') for c in commandvalue])         
         commandvalue = commandvaluehex
@@ -442,7 +480,7 @@ def decodemsg(msg):
           dumptext = ' --- ' + str(msg)
       else:
           dumptext = ''
-      output = str(format(round(time.time()-starttime,6),'14.6f')) + " - " + "{:<20}".format(sendertext) + " (0x" + str(format(sender,'02x')) + ") " + "-> " + "{:<20}".format(receivertext) + " (0x" + str(format(receiver,'02x')) + ") " + "--- " + "{:<20}".format(commandtext) + " (0x" + str(format(command,'02x')) + ") " + "--- " + str(commandvalue) + dumptext
+      output = str(format(round(time.time()-starttime,6),'14.6f')) + " - " + "{:<21}".format(sendertext) + " (0x" + str(format(sender,'02x')) + ") " + "-> " + "{:<21}".format(receivertext) + " (0x" + str(format(receiver,'02x')) + ") " + "--- " + "{:<21}".format(commandtext) + " (0x" + str(format(command,'02x')) + ") " + "--- " + str(commandvalue) + dumptext
       xprint (output)
       if filecsvoutput:
           fileoutput = str(format(round(time.time()-starttime,6),'14.6f')) + "," + sendertext + "," + str(hex(sender)) + ","  + receivertext + "," + str(hex(receiver)) + ","  + commandtext + "," + str(hex(command)) + "," + str(commandvalue) + "," + str(msg)
