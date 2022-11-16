@@ -5,7 +5,7 @@ __author__ = "Patricio Latini"
 __copyright__ = "Copyright 2021, Patricio Latini"
 __credits__ = "Patricio Latini"
 __license__ = "GPLv3"
-__version__ = "0.9.30"
+__version__ = "0.9.31"
 __maintainer__ = "Patricio Latini"
 __email__ = "p_latini@hotmail.com"
 __status__ = "Production"
@@ -254,7 +254,9 @@ commands = {
             (0x12, 0x13) : 'FOCUS_SLEW_DONE',
             (0x12, 0x24) : 'FOCUS_MOVE_POS',
             (0x12, 0x25) : 'FOCUS_MOVE_NEG',
-            (0x12, 0x2c) : 'FOCUS_XXX',
+            (0x12, 0x2a) : 'FOCUS_CALIBRATION_ENABLE',
+            (0x12, 0x2b) : 'FOCUS_IS_CALIBRATED',
+            (0x12, 0x2c) : 'FOCUS_GET_CALIBRATION_POSITIONS',
             (0x12, 0x3b) : 'FOCUS_XXX',
             (0x12, 0xfe) : 'FUCUS_GET_FW_VER',
             (0x17, 0x00) : 'DEWHEATER_GET_CURRENT_POWER',
