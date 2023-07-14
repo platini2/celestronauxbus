@@ -5,7 +5,7 @@ __author__ = "Patricio Latini"
 __copyright__ = "Copyright 2021, Patricio Latini"
 __credits__ = "Patricio Latini"
 __license__ = "GPLv3"
-__version__ = "0.9.31"
+__version__ = "0.9.32"
 __maintainer__ = "Patricio Latini"
 __email__ = "p_latini@hotmail.com"
 __status__ = "Production"
@@ -46,6 +46,7 @@ oof = 0
 scannerid = 0x22
 preamble = 0x3b
 preamble2 = 0x3c
+degree_sign = u'\N{DEGREE SIGN}'
 
 mounts = {
             0x01 : 'Nexstar GPS Legacy',
@@ -251,6 +252,7 @@ commands = {
             (0x11, 0xfe) : 'MTR_GET_VERSION',
             (0x12, 0x01) : 'FOCUS_GET_POSITION',   
             (0x12, 0x02) : 'FOCUS_GOTO_FAST', 
+            (0x12, 0x05) : 'FOCUS_GET_MODEL', 
             (0x12, 0x13) : 'FOCUS_SLEW_DONE',
             (0x12, 0x24) : 'FOCUS_MOVE_POS',
             (0x12, 0x25) : 'FOCUS_MOVE_NEG',
@@ -543,8 +545,8 @@ def decodestarsensestar(msg):
     bx,px,by,py=int(msg[0:2],16)-64,int(msg[2:8],16),int(msg[8:10],16)-64,int(msg[10:16],16)
     dx,mx,sx = decdeg2dms(twos_comp(int(msg[2:8],16),24)*ssxfov/pow(2,24))
     dy,my,sy = decdeg2dms(twos_comp(int(msg[10:16],16),24)*ssyfov/pow(2,24))
-    px = format(dx) + '°' + format(mx) + '\'' + format(sx) + '"'
-    py = format(dy) + '°' + format(my) + '\'' + format(sy) + '"'
+    px = format(dx) + degree_sign + format(mx) + '\'' + format(sx) + '"'
+    py = format(dy) + degree_sign + format(my) + '\'' + format(sy) + '"'
     msg=str(bx) + " - " + "{:<11}".format(px) + " - " + str(by) + " - " + "{:<11}".format(py)
     return msg
 
