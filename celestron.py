@@ -5,7 +5,7 @@ __author__ = "Patricio Latini"
 __copyright__ = "Copyright 2021, Patricio Latini"
 __credits__ = "Patricio Latini"
 __license__ = "GPLv3"
-__version__ = "0.9.32"
+__version__ = "0.9.33"
 __maintainer__ = "Patricio Latini"
 __email__ = "p_latini@hotmail.com"
 __status__ = "Production"
@@ -68,8 +68,8 @@ mounts = {
             0x1485 : 'AVX',
             ### 0x15xx : 'Cosmos',              
             0x1687 : 'Nexstar Evolution',
-            0x1788 : 'CGX'}
-            ### 0x18xx : 'CGXL',
+            0x1788 : 'CGX',
+            0x1888 : 'CGX-L'}
             ### 0x19xx : 'Astrofi',
             ### 0x1axx : 'SkyWatcher'}
 
