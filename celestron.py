@@ -5,7 +5,7 @@ __author__ = "Patricio Latini"
 __copyright__ = "Copyright 2021, Patricio Latini"
 __credits__ = "Patricio Latini"
 __license__ = "GPLv3"
-__version__ = "0.9.32"
+__version__ = "0.9.34"
 __maintainer__ = "Patricio Latini"
 __email__ = "p_latini@hotmail.com"
 __status__ = "Production"
@@ -43,7 +43,7 @@ rawfileoutput = False
 global oof
 oof = 0
 
-scannerid = 0x22
+scannerid = 0x2f
 preamble = 0x3b
 preamble2 = 0x3c
 degree_sign = u'\N{DEGREE SIGN}'
@@ -68,8 +68,8 @@ mounts = {
             0x1485 : 'AVX',
             ### 0x15xx : 'Cosmos',              
             0x1687 : 'Nexstar Evolution',
-            0x1788 : 'CGX'}
-            ### 0x18xx : 'CGXL',
+            0x1788 : 'CGX',
+            0x1888 : 'CGX-L'}
             ### 0x19xx : 'Astrofi',
             ### 0x1axx : 'SkyWatcher'}
 
@@ -85,7 +85,8 @@ devices = {
             0x17 : 'Dew Heater Controller', 
             0x20 : 'CPWI',
             0x21 : 'CFM',
-            0x22 : 'AUXBUS Scanner',
+            0x21 : 'Focuser Utility',
+            0x2f : 'AUXBUS Scanner',
             0x30 : 'CGX RA Switch',
             0x31 : 'CGX DEC Switch',
             0x32 : 'CGX DEC Autoguide Pt',
@@ -100,7 +101,7 @@ devices = {
             0xbb : 'Dew Heater Controller',
             0xbf : 'Mount Lights'}
 
-controllers = [ 0x04 , 0x0d , 0x0e , 0x20, 0x21, 0x22 ]
+controllers = [ 0x04 , 0x0d , 0x0e , 0x20, 0x21, 0x22, 0x2f ]
 activedevices = {}
 
 commands = {  
