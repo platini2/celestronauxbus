@@ -5,7 +5,7 @@ __author__ = "Patricio Latini"
 __copyright__ = "Copyright 2021, Patricio Latini"
 __credits__ = "Patricio Latini"
 __license__ = "GPLv3"
-__version__ = "0.9.35"
+__version__ = "0.9.36"
 __maintainer__ = "Patricio Latini"
 __email__ = "p_latini@hotmail.com"
 __status__ = "Production"
@@ -85,7 +85,7 @@ devices = {
             0x17 : 'Dew Heater Controller', 
             0x20 : 'CPWI',
             0x21 : 'CFM',
-            0x21 : 'Focuser Utility',
+            0x22 : 'Focuser Utility',
             0x2f : 'AUXBUS Scanner',
             0x30 : 'CGX RA Switch',
             0x31 : 'CGX DEC Switch',
